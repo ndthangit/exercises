@@ -74,13 +74,53 @@ int findTheNumberOfInternalLink(map<string, verticesList> &edgeList, map<string,
     }
     return coutTheNUmberOfInternalLink;
 }
-void findTheMinimumPath(map<string, verticesList> &edgeList, map<string, bool> &visitedEdgeList)
+void findTheMinimumPath(map<string, verticesList> &edgeList, map<string, bool> &visitedEdgeList, const string begin, const string end)
 {
+    // bfs algorithm find the minimum path from a vertex to another
+    queue<string> edgeQueue;
+    map<string, string> parentMap;
+    visitedEdgeList[end] = true;
+    edgeQueue.push(end);
 
-    for (auto &word : visitedEdgeList)
+    while (!edgeQueue.empty())
     {
-        visitedEdgeList[word.first] = false;
+        string currentVertex = edgeQueue.front();
+        edgeQueue.pop();
+
+        if (currentVertex == begin)
+        {
+            cout << "Shortest Path: ";
+            string pathVertex = begin;
+            while (pathVertex != end)
+            {
+                cout << pathVertex;
+                if (parentMap.find(pathVertex) != parentMap.end())
+                {
+                    cout << " -> ";
+                    pathVertex = parentMap[pathVertex];
+                }
+                else
+                {
+                    break;
+                }
+            }
+            cout << pathVertex << endl;
+
+            return;
+        }
+
+        for (const string &vertex : edgeList[currentVertex].vertex)
+        {
+            if (!visitedEdgeList[vertex])
+            {
+                visitedEdgeList[vertex] = true;
+                parentMap[vertex] = currentVertex;
+                edgeQueue.push(vertex);
+            }
+        }
     }
+
+    cout << "No path found!" << endl;
 }
 int main()
 {
