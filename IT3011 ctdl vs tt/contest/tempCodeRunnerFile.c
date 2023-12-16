@@ -1,0 +1,2 @@
+free(current);
+        // return head;
