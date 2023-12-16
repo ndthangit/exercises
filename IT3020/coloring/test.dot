@@ -1,0 +1,12 @@
+graph dothi {
+    5 [color=".7 .3 1.0", style=filled];
+    4 [color=".7 .3 1.0", style=filled];
+    1 [color="0.1 0.3 0.5", style=filled];
+    3 [fillcolor=green, style=filled];
+    2 [fillcolor=red, style=filled];
+    1 -- 2;
+    2 -- 3;
+    3 -- 4;
+    4 -- 1;
+    1 -- 5;
+}
