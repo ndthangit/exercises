@@ -139,13 +139,22 @@ int main()
     setupTree(edgeList, visitedEdgeList);
 
     cout << "the number of internal link in graph: " << findTheNumberOfInternalLink(edgeList, visitedEdgeList) << endl;
-    cout << visitedEdgeList["spumy"];
-    // ok
-    // string which = "which";
-    // for (int i = 0; i < edgeList[which].vertex.size(); i++)
-    // {
-    //     cout << edgeList[which].vertex[i] << endl;
-    // }
+    // cout << visitedEdgeList["spumy"] << endl;
+    //  ok
+    //  string which = "which";
+    //  for (int i = 0; i < edgeList[which].vertex.size(); i++)
+    //  {
+    //      cout << edgeList[which].vertex[i] << endl;
+    //  }
+    string begin;
+    string end;
+    cout << "find the minimum path from vertex to another" << endl;
+    cout << "begin vertex: ";
+    getline(cin, begin);
+    cout << "end vertex: ";
+    getline(cin, end);
 
+    findTheMinimumPath(edgeList, visitedEdgeList, begin, end);
+    // cout << visitedEdgeList["spumy"] << endl;
     return 0;
 }

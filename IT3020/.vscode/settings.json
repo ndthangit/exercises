@@ -1,7 +1,8 @@
 {
     "files.associations": {
         "math.h": "c",
-        "iostream": "cpp"
+        "iostream": "cpp",
+        "cstddef": "cpp"
     },
     "C_Cpp.errorSquiggles": "disabled",
     "cSpell.words": [
