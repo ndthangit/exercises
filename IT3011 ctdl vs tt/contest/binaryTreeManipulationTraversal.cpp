@@ -88,7 +88,7 @@ node *findNode(node *tree, dataType value)
 void addLeft(node *tree, dataType childNode, dataType parentNode)
 {
     node *parent = findNode(tree, parentNode);
-    if (parent != NULL)
+    if (parent != NULL && parent->leftChild ==NULL)
     {
         node *newNode = makeNode(childNode);
         parent->leftChild = newNode;
@@ -97,7 +97,7 @@ void addLeft(node *tree, dataType childNode, dataType parentNode)
 void addRight(node *tree, dataType childNode, dataType parentNode)
 {
     node *parent = findNode(tree, parentNode);
-    if (parent != NULL)
+    if (parent != NULL&& parent->rightChild ==NULL)
     {
         node *newNode = makeNode(childNode);
         parent->rightChild = newNode;
