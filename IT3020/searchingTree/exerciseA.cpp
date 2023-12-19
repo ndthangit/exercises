@@ -4,6 +4,7 @@
 #include <fstream>
 #include <map>
 #include <queue>
+
 using namespace std;
 
 typedef struct verticesList
@@ -15,6 +16,10 @@ bool check2differentWords(const string &word1, const string &word2)
 {
     if (word1.length() != word2.length())
         return false;
+    if (word1.compare(word2) == 0)
+    {
+        return false;
+    }
 
     int different = 0;
     for (int i = 0; i < word1.length(); i++)
@@ -31,6 +36,7 @@ bool check2differentWords(const string &word1, const string &word2)
     else
         return false;
 }
+
 void setupTree(map<string, verticesList> &edgeList, map<string, bool> &visitedEdgeList)
 {
     for (auto &word1 : visitedEdgeList)
@@ -57,29 +63,27 @@ void explore(map<string, verticesList> &edgeList, map<string, bool> &visitedEdge
 }
 int findTheNumberOfInternalLink(map<string, verticesList> &edgeList, map<string, bool> &visitedEdgeList)
 {
+    map<string, bool> visitedEdgeListCopy = visitedEdgeList;
     // dfs algorithm find the number of internal link
     int coutTheNUmberOfInternalLink = 0;
-    for (auto &word : visitedEdgeList)
+    for (auto &word : visitedEdgeListCopy)
     {
-        coutTheNUmberOfInternalLink++;
-        if (visitedEdgeList[word.first] == false)
+        if (visitedEdgeListCopy[word.first] == false)
         {
             coutTheNUmberOfInternalLink++;
-            explore(edgeList, visitedEdgeList, word.first);
+            explore(edgeList, visitedEdgeListCopy, word.first);
         }
-    }
-    for (auto &word : visitedEdgeList)
-    {
-        visitedEdgeList[word.first] = false;
     }
     return coutTheNUmberOfInternalLink;
 }
+
 void findTheMinimumPath(map<string, verticesList> &edgeList, map<string, bool> &visitedEdgeList, const string begin, const string end)
 {
     // bfs algorithm find the minimum path from a vertex to another
+    map<string, bool> visitedEdgeListCopy = visitedEdgeList;
     queue<string> edgeQueue;
     map<string, string> parentMap;
-    visitedEdgeList[end] = true;
+    visitedEdgeListCopy[end] = true;
     edgeQueue.push(end);
 
     while (!edgeQueue.empty())
@@ -113,7 +117,7 @@ void findTheMinimumPath(map<string, verticesList> &edgeList, map<string, bool> &
         {
             if (!visitedEdgeList[vertex])
             {
-                visitedEdgeList[vertex] = true;
+                visitedEdgeListCopy[vertex] = true;
                 parentMap[vertex] = currentVertex;
                 edgeQueue.push(vertex);
             }
@@ -128,7 +132,6 @@ int main()
     map<string, verticesList> edgeList;
 
     ifstream inputFile("sgb-words.txt");
-
     string word;
     while (inputFile >> word)
     {
@@ -137,24 +140,35 @@ int main()
     inputFile.close();
 
     setupTree(edgeList, visitedEdgeList);
+    string control;
+    while (1)
+    {
+        cout << "Enter a : Finding the quantity of internal Link" << endl;
+        cout << "Enter b : finding the minimum path from a vertex to another" << endl;
+        cout << "Enter # : impeding the program" << endl;
+        cout << "what is your control? ";
+        getline(cin, control);
+        if (control == "a")
+        {
+            cout << "a)the number of internal link in graph: " << findTheNumberOfInternalLink(edgeList, visitedEdgeList) << endl;
+        }
+        else if (control == "b")
+        {
+            string begin;
+            string end;
+            cout << "b)find the minimum path from a vertex to another" << endl;
+            cout << "begin vertex: ";
+            getline(cin, begin);
+            cout << "end vertex: ";
+            getline(cin, end);
 
-    cout << "the number of internal link in graph: " << findTheNumberOfInternalLink(edgeList, visitedEdgeList) << endl;
-    // cout << visitedEdgeList["spumy"] << endl;
-    //  ok
-    //  string which = "which";
-    //  for (int i = 0; i < edgeList[which].vertex.size(); i++)
-    //  {
-    //      cout << edgeList[which].vertex[i] << endl;
-    //  }
-    string begin;
-    string end;
-    cout << "find the minimum path from vertex to another" << endl;
-    cout << "begin vertex: ";
-    getline(cin, begin);
-    cout << "end vertex: ";
-    getline(cin, end);
-
-    findTheMinimumPath(edgeList, visitedEdgeList, begin, end);
+            findTheMinimumPath(edgeList, visitedEdgeList, begin, end);
+        }
+        else if (control == "#")
+        {
+            break;
+        }
+    }
     // cout << visitedEdgeList["spumy"] << endl;
     return 0;
 }

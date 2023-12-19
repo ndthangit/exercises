@@ -1,11 +1,14 @@
 #include <iostream>
 #include <string>
+#include <cstring>
 #include <vector>
 #include <fstream>
 #include <map>
 #include <queue>
 #include <cstddef>
 #include <stack>
+#include <unordered_set>
+
 using namespace std;
 
 typedef struct verticesList
@@ -15,7 +18,11 @@ typedef struct verticesList
 
 bool check2differentWords(const string &word1, const string &word2)
 {
-    // Kiểm tra xem mỗi ký tự trong bốn chữ cuối của word1 có xuất hiện trong word2 hay không
+    // Checking whether the four alphabets of word1 exist in word2
+    if (word1 == word2)
+    {
+        return false;
+    }
     size_t len = word1.length();
     string lastFour = word1.substr(len - 4);
     for (char alphabet : lastFour)
@@ -52,44 +59,130 @@ void explore(map<string, verticesList> &edgeList, map<string, bool> &visitedEdge
         }
     }
 }
-void findAnInternalLink(map<string, verticesList> &edgeList, map<string, bool> &visitedEdgeList, const string currentVertex)
+void reverseGraph(map<string, verticesList> &edgeList, map<string, verticesList> &reversedEdgeList)
 {
-    stack<string> result;
+    for (auto &word1 : edgeList)
+    {
+        for (auto &word2 : word1.second.vertex)
+        {
+            reversedEdgeList[word2].vertex.push_back(word1.first);
+        }
+    }
+}
+
+void exploreFindAnInternalLink(map<string, verticesList> &edgeList, map<string, bool> &visitedEdgeList, const string currentVertex, stack<string> &result)
+{
     visitedEdgeList[currentVertex] = true;
     result.push(currentVertex);
-
     for (int i = 0; i < edgeList[currentVertex].vertex.size(); i++)
     {
         if (visitedEdgeList[edgeList[currentVertex].vertex[i]] == false)
         {
-            findAnInternalLink(edgeList, visitedEdgeList, edgeList[currentVertex].vertex[i]);
+            exploreFindAnInternalLink(edgeList, visitedEdgeList, edgeList[currentVertex].vertex[i], result);
+        }
+    }
+}
+
+void findStrongAnInternalLink(map<string, verticesList> &edgeList, map<string, bool> &visitedEdgeList, const string Vertex)
+{
+    map<string, verticesList> reverseDiagram;
+    reverseGraph(edgeList, reverseDiagram);
+    for (auto &word1 : edgeList)
+    {
+        for (auto &word2 : word1.second.vertex)
+        {
+            reverseDiagram[word2].vertex.push_back(word1.first);
         }
     }
 
-    while (!result.empty())
+    stack<string> result;
+    stack<string> print;
+
+    map<string, bool> &visitedEdgeListCopy1 = visitedEdgeList;
+    map<string, bool> &visitedEdgeListCopy2 = visitedEdgeList;
+
+    exploreFindAnInternalLink(edgeList, visitedEdgeListCopy1, Vertex, result);
+    exploreFindAnInternalLink(reverseDiagram, visitedEdgeListCopy2, Vertex, print);
+
+    while (!print.empty())
     {
-        cout << result.top() << " ";
-        result.pop();
+        if (visitedEdgeListCopy1[print.top()] = true)
+        {
+            cout << print.top() << " ";
+        }
+        print.pop();
     }
 }
 int findTheNumberOfInternalLink(map<string, verticesList> &edgeList, map<string, bool> &visitedEdgeList)
 {
+    map<string, bool> visitedEdgeListCopy = visitedEdgeList;
     // dfs algorithm find the number of internal link
     int coutTheNUmberOfInternalLink = 0;
-    for (auto &word : visitedEdgeList)
+    for (auto &word : visitedEdgeListCopy)
     {
-        if (visitedEdgeList[word.first] == false)
+        if (visitedEdgeListCopy[word.first] == false)
         {
             coutTheNUmberOfInternalLink++;
-            explore(edgeList, visitedEdgeList, word.first);
+            explore(edgeList, visitedEdgeListCopy, word.first);
         }
     }
-    // for (auto &word : visitedEdgeList)
-    // {
-    //     visitedEdgeList[word.first] = false;
-    // }
     return coutTheNUmberOfInternalLink;
 }
+
+void findTheMinimumPath(map<string, verticesList> &edgeList, map<string, bool> &visitedEdgeList, const string begin, const string end)
+{
+    // bfs algorithm find the minimum path from a vertex to another
+    map<string, bool> visitedEdgeListCopy = visitedEdgeList;
+    queue<string> edgeQueue;
+    stack<string> arrayPrint;
+    map<string, string> parentMap;
+    visitedEdgeListCopy[begin] = true; //
+    edgeQueue.push(begin);             //
+
+    while (!edgeQueue.empty())
+    {
+        string currentVertex = edgeQueue.front();
+        edgeQueue.pop();
+
+        if (currentVertex == end) //
+        {
+            string pathVertex = end; //
+            while (pathVertex != begin)
+            {
+                arrayPrint.push(pathVertex);
+                pathVertex = parentMap[pathVertex];
+            }
+            arrayPrint.push(pathVertex);
+            cout << pathVertex << endl;
+            cout << "Shortest Path: ";
+            while (!arrayPrint.empty())
+            {
+                cout << arrayPrint.top();
+                arrayPrint.pop();
+                if (!arrayPrint.empty())
+                {
+                    cout << " -> ";
+                }
+            }
+            cout << endl;
+
+            return;
+        }
+
+        for (const string &vertex : edgeList[currentVertex].vertex)
+        {
+            if (!visitedEdgeListCopy[vertex])
+            {
+                visitedEdgeListCopy[vertex] = true;
+                parentMap[vertex] = currentVertex;
+                edgeQueue.push(vertex);
+            }
+        }
+    }
+
+    cout << "No path found!" << endl;
+}
+
 int main()
 {
     map<string, bool> visitedEdgeList;
@@ -105,41 +198,64 @@ int main()
     inputFile.close();
 
     setupTree(edgeList, visitedEdgeList);
-    cout << "the number of internal link in graph: " << findTheNumberOfInternalLink(edgeList, visitedEdgeList) << endl;
-    //cout << check2differentWords("words", "dross");
-    // cout << "exercise 4B"<<endl;
-    // cout << "a) find the number of internal link"<<endl;
-    // cout << "b) find the internal link containing a word "<<endl;
-    // cout << "c) find minimum path from a vertex to another "<<endl;
-    // char control[20];
-    // while (1)
+    // check the exiting destination
+    // for (auto &word : visitedEdgeList)
     // {
-    //     cout<< "your control: ";
-    //     cin >> control;
-    //     if (strcmp(control, "addlast") == 0)
+    //     if (edgeList[word.first].vertex.empty() == true)
     //     {
-    //         int k;
-    //         cin >> k;
-    //         addLast(head, k);
-    //     }
-    //     else if (strcmp(control, "addfirst") == 0)
-    //     {
-    //         int k;
-    //         cin >> k;
-    //         head = addFirst(head, k);
-    //     }
-    //     else if (strcmp(control, "#") == 0)
-    //     {
-    //         break;
+    //         cout << " exiting" << endl;
     //     }
     // }
 
-    // cout << " find an internal link" << endl;
-    // cout << " what word you want to find? ";
-    // string internalLink;
-    // getline(cin, internalLink);
-    // cout << "the internal link contains word \"" << internalLink << "\": ";
+    // findStrongAnInternalLink(edgeList, visitedEdgeList, "belli");
+    // cout << check2differentWords("words", "torso");
+    // string vertexToPrint = "words";
 
-    // findAnInternalLink(edgeList, visitedEdgeList, "words");
+    // cout << "Edges for vertex '" << vertexToPrint << "':" << endl;
+    // for (const auto &neighbor : edgeList[vertexToPrint].vertex)
+    // {
+    //     cout << vertexToPrint << " -> " << neighbor << endl;
+    // }
+    string control;
+    while (1)
+    {
+        cout << "Enter a : Finding the quantity of internal Link" << endl;
+        cout << "Enter b : Finding a strong internal link" << endl;
+        cout << "Enter c : Finding the minimum path from a vertex to another" << endl;
+        cout << "Enter # : exiting the program" << endl;
+        cout << "what is your control? ";
+        getline(cin, control);
+        if (control == "a")
+        {
+            cout << "a) the number of internal link in graph: " << findTheNumberOfInternalLink(edgeList, visitedEdgeList) << endl;
+        }
+        else if (control == "b")
+        {
+            string vertex;
+
+            cout << "b)Finding a strong internal link" << endl;
+            cout << "Enter a vertex: ";
+            getline(cin, vertex);
+            cout << "The strong internal link: ";
+            findStrongAnInternalLink(edgeList, visitedEdgeList, vertex);
+            cout << endl;
+        }
+        else if (control == "c")
+        {
+            string begin;
+            string end;
+            cout << "c)find the minimum path from a vertex to another" << endl;
+            cout << "begin vertex: ";
+            getline(cin, begin);
+            cout << "end vertex: ";
+            getline(cin, end);
+
+            findTheMinimumPath(edgeList, visitedEdgeList, begin, end);
+        }
+        else if (control == "#")
+        {
+            break;
+        }
+    }
     return 0;
 }
