@@ -2,7 +2,10 @@
     "files.associations": {
         "math.h": "c",
         "iostream": "cpp",
-        "cstddef": "cpp"
+        "cstddef": "cpp",
+        "deque": "cpp",
+        "string": "cpp",
+        "vector": "cpp"
     },
     "C_Cpp.errorSquiggles": "disabled",
     "cSpell.words": [

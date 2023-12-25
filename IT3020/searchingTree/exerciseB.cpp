@@ -87,26 +87,19 @@ void findStrongAnInternalLink(map<string, verticesList> &edgeList, map<string, b
 {
     map<string, verticesList> reverseDiagram;
     reverseGraph(edgeList, reverseDiagram);
-    for (auto &word1 : edgeList)
-    {
-        for (auto &word2 : word1.second.vertex)
-        {
-            reverseDiagram[word2].vertex.push_back(word1.first);
-        }
-    }
 
     stack<string> result;
     stack<string> print;
 
-    map<string, bool> &visitedEdgeListCopy1 = visitedEdgeList;
-    map<string, bool> &visitedEdgeListCopy2 = visitedEdgeList;
+    map<string, bool> visitedEdgeListCopy1 = visitedEdgeList;
+    map<string, bool> visitedEdgeListCopy2 = visitedEdgeList;
 
     exploreFindAnInternalLink(edgeList, visitedEdgeListCopy1, Vertex, result);
     exploreFindAnInternalLink(reverseDiagram, visitedEdgeListCopy2, Vertex, print);
 
     while (!print.empty())
     {
-        if (visitedEdgeListCopy1[print.top()] = true)
+        if (visitedEdgeListCopy1[print.top()] == true)
         {
             cout << print.top() << " ";
         }
@@ -136,8 +129,8 @@ void findTheMinimumPath(map<string, verticesList> &edgeList, map<string, bool> &
     queue<string> edgeQueue;
     stack<string> arrayPrint;
     map<string, string> parentMap;
-    visitedEdgeListCopy[begin] = true; //
-    edgeQueue.push(begin);             //
+    visitedEdgeListCopy[begin] = true; 
+    edgeQueue.push(begin);            
 
     while (!edgeQueue.empty())
     {
@@ -188,7 +181,7 @@ int main()
     map<string, bool> visitedEdgeList;
     map<string, verticesList> edgeList;
 
-    ifstream inputFile("sgb-words.txt");
+    ifstream inputFile("sgb-words 3.txt");
 
     string word;
     while (inputFile >> word)

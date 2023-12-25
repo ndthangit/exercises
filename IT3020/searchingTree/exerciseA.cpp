@@ -4,6 +4,7 @@
 #include <fstream>
 #include <map>
 #include <queue>
+#include <stack>
 
 using namespace std;
 
@@ -61,20 +62,20 @@ void explore(map<string, verticesList> &edgeList, map<string, bool> &visitedEdge
         }
     }
 }
-int findTheNumberOfInternalLink(map<string, verticesList> &edgeList, map<string, bool> &visitedEdgeList)
+int findTheNumberOfConnectedComponent(map<string, verticesList> &edgeList, map<string, bool> &visitedEdgeList)
 {
     map<string, bool> visitedEdgeListCopy = visitedEdgeList;
-    // dfs algorithm find the number of internal link
-    int coutTheNUmberOfInternalLink = 0;
+    // dfs algorithm find the number of connected component
+    int coutTheNUmberOfConnectedComponent = 0;
     for (auto &word : visitedEdgeListCopy)
     {
         if (visitedEdgeListCopy[word.first] == false)
         {
-            coutTheNUmberOfInternalLink++;
+            coutTheNUmberOfConnectedComponent++;
             explore(edgeList, visitedEdgeListCopy, word.first);
         }
     }
-    return coutTheNUmberOfInternalLink;
+    return coutTheNUmberOfConnectedComponent;
 }
 
 void findTheMinimumPath(map<string, verticesList> &edgeList, map<string, bool> &visitedEdgeList, const string begin, const string end)
@@ -82,40 +83,44 @@ void findTheMinimumPath(map<string, verticesList> &edgeList, map<string, bool> &
     // bfs algorithm find the minimum path from a vertex to another
     map<string, bool> visitedEdgeListCopy = visitedEdgeList;
     queue<string> edgeQueue;
+    stack<string> arrayPrint;
     map<string, string> parentMap;
-    visitedEdgeListCopy[end] = true;
-    edgeQueue.push(end);
+    visitedEdgeListCopy[begin] = true; //
+    edgeQueue.push(begin);             //
 
     while (!edgeQueue.empty())
     {
         string currentVertex = edgeQueue.front();
         edgeQueue.pop();
 
-        if (currentVertex == begin)
+        if (currentVertex == end) //
         {
-            cout << "Shortest Path: ";
-            string pathVertex = begin;
-            while (pathVertex != end)
+            string pathVertex = end; //
+            while (pathVertex != begin)
             {
-                cout << pathVertex;
-                if (parentMap.find(pathVertex) != parentMap.end())
+                arrayPrint.push(pathVertex);
+                pathVertex = parentMap[pathVertex];
+            }
+            arrayPrint.push(pathVertex);
+            cout << pathVertex << endl;
+            cout << "Shortest Path: ";
+            while (!arrayPrint.empty())
+            {
+                cout << arrayPrint.top();
+                arrayPrint.pop();
+                if (!arrayPrint.empty())
                 {
                     cout << " -> ";
-                    pathVertex = parentMap[pathVertex];
-                }
-                else
-                {
-                    break;
                 }
             }
-            cout << pathVertex << endl;
+            cout << endl;
 
             return;
         }
 
         for (const string &vertex : edgeList[currentVertex].vertex)
         {
-            if (!visitedEdgeList[vertex])
+            if (!visitedEdgeListCopy[vertex])
             {
                 visitedEdgeListCopy[vertex] = true;
                 parentMap[vertex] = currentVertex;
@@ -131,7 +136,7 @@ int main()
     map<string, bool> visitedEdgeList;
     map<string, verticesList> edgeList;
 
-    ifstream inputFile("sgb-words.txt");
+    ifstream inputFile("sgb-words 3.txt");
     string word;
     while (inputFile >> word)
     {
@@ -143,14 +148,14 @@ int main()
     string control;
     while (1)
     {
-        cout << "Enter a : Finding the quantity of internal Link" << endl;
+        cout << "Enter a : Finding the quantity of connected component" << endl;
         cout << "Enter b : finding the minimum path from a vertex to another" << endl;
         cout << "Enter # : impeding the program" << endl;
         cout << "what is your control? ";
         getline(cin, control);
         if (control == "a")
         {
-            cout << "a)the number of internal link in graph: " << findTheNumberOfInternalLink(edgeList, visitedEdgeList) << endl;
+            cout << "a)the number of connected component in graph: " << findTheNumberOfConnectedComponent(edgeList, visitedEdgeList) << endl;
         }
         else if (control == "b")
         {
