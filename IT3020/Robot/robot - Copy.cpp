@@ -7,7 +7,6 @@ using namespace std;
 
 void floyd(vector<vector<int>> &distance, int quantityVertex)
 {
-    //The Floyd Warshall algorithm is used to find all minimum paths between two random vertex in a small graph (the quantity of vertexes is lower than 400).
     for (int intermediatePoint = 0; intermediatePoint < quantityVertex; intermediatePoint++)
     {
         for (int begin = 0; begin < quantityVertex; begin++)
@@ -30,7 +29,6 @@ void floyd(vector<vector<int>> &distance, int quantityVertex)
 
 void bfs(vector<vector<int>> &originalDistance, vector<vector<int>> &minDistance, int quantityVertex, int limitedDistance, int locationRobotA, int destinationA, int locationRobotB, int destinationB)
 {
-    //use bfs changed algorithm having a vertex as a edge( location A, location B) 
     vector<vector<bool>> visited(quantityVertex, vector<bool>(quantityVertex, false));
     queue<pair<int, int>> solve;
     stack<pair<int, int>> schedule;
@@ -38,8 +36,7 @@ void bfs(vector<vector<int>> &originalDistance, vector<vector<int>> &minDistance
 
     solve.push({locationRobotA, locationRobotB});
     visited[locationRobotA][locationRobotB] = true;
-
-    cout << "location A | location B | distance 2 vertexes " << endl;
+    
 
     while (!solve.empty())
     {
@@ -59,7 +56,7 @@ void bfs(vector<vector<int>> &originalDistance, vector<vector<int>> &minDistance
             while (!schedule.empty())
             {
                 pair<int, int> top = schedule.top();
-                cout << "     " << top.first << "     |      " << top.second << "     |        " << minDistance[top.first][top.second] << endl;
+                cout << top.first << " " << top.second << endl;
                 schedule.pop();
             }
 
@@ -72,8 +69,11 @@ void bfs(vector<vector<int>> &originalDistance, vector<vector<int>> &minDistance
             if (visited[edge.first][nearlyEdge] == false && originalDistance[edge.second][nearlyEdge] != 10000 && nearlyEdge != edge.first && minDistance[edge.first][nearlyEdge] > limitedDistance)
             {
                 visited[edge.first][nearlyEdge] = true;
-
+                
                 path[{edge.first, nearlyEdge}] = edge;
+                cout << "\"" << edge.first << "," << nearlyEdge << "\""
+                     << "->"
+                     << "\"" << edge.first << "," << edge.second << "\";"<<endl;
                 solve.push({edge.first, nearlyEdge});
             }
         }
@@ -82,8 +82,11 @@ void bfs(vector<vector<int>> &originalDistance, vector<vector<int>> &minDistance
             if (visited[nearlyEdge][edge.second] == false && originalDistance[nearlyEdge][edge.first] != 10000 && nearlyEdge != edge.second && minDistance[edge.second][nearlyEdge] > limitedDistance)
             {
                 visited[nearlyEdge][edge.second] = true;
-
+                
                 path[{nearlyEdge, edge.second}] = edge;
+                cout << "\"" << nearlyEdge << "," << edge.second << "\""
+                     << "->"
+                     << "\"" << edge.first << "," << edge.second << "\";"<<endl;
                 solve.push({nearlyEdge, edge.second});
             }
         }
@@ -105,7 +108,7 @@ int main()
         originalDistance[vertexX][vertexY] = distance2vertex;
         originalDistance[vertexY][vertexX] = distance2vertex;
     }
-    // create minimum distance graph
+    //create minimum distance graph
     vector<vector<int>> minDistance = originalDistance;
     floyd(minDistance, quantityVertex);
 
@@ -115,6 +118,28 @@ int main()
 
     int limitedDistance;
     cin >> limitedDistance;
+
+    // In ra vector originalDistance
+    cout << "originalDistance:" << endl;
+    for (const auto &row : originalDistance)
+    {
+        for (int val : row)
+        {
+            cout << val << ' ';
+        }
+        cout << endl;
+    }
+
+    // In ra vector minDistance
+    cout << "minDistance:" << endl;
+    for (const auto &row : minDistance)
+    {
+        for (int val : row)
+        {
+            cout << val << ' ';
+        }
+        cout << endl;
+    }
 
     bfs(originalDistance, minDistance, quantityVertex, limitedDistance, locationRobotA, destinationA, locationRobotB, destinationB);
     return 0;
