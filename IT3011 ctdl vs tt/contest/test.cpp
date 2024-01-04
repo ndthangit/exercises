@@ -203,7 +203,7 @@ int main()
     // cout << endl;
     // node *findTest = findNode(tree, 9);
     // cout << findTest->rightSibling->identification;
-    preOrder(tree, array);
+    inOrder(tree, array);
     while (!array.empty())
     {
         cout << array.front() << " ";

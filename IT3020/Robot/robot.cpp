@@ -88,6 +88,7 @@ void bfs(vector<vector<int>> &originalDistance, vector<vector<int>> &minDistance
             }
         }
     }
+    cout << "khong the!" << endl;
 }
 int main()
 {
