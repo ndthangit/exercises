@@ -1,67 +1,53 @@
-#include <iostream>
-#include <stack>
-#include <vector>
+#include <bits/stdc++.h>
 
 using namespace std;
-
-stack<int> capacity;
-vector<int> myArray;
-
-void printArray(vector<int> &myArray)
-{
-    for (int i = 0; i < myArray.size(); i++)
-    {
-        cout << myArray[i];
-    }
-    cout << " ";
-}
-void solution(int current)
-{
-
-    if (myArray[current] == 0)
-    {
-        for (int i = 1; i <= 2; i++)
-        {
-            myArray[current] = i;
-            if (i == 1)
-            {
-                capacity.push(1);
-            }
-            else if (!capacity.empty() && i == 2)
-            {
-                capacity.pop();
-            }
-
-            // print appropiate array
-            if (current == myArray.size() - 1 && capacity.empty())
-            {
-                printArray(myArray);
-            }
-            else if (current == myArray.size() - 1 && !capacity.empty())
-            {
-            }
-            else
-            {
-                solution(current + 1);
-            }
-
-            myArray[current] = 0;
-        }
-    }
-    else
-        solution(current + 1);
-}
+const long long N = 1e5 + 5, inf = 1e15;
+vector<pair<long long, long long>> ed[N];
 int main()
 {
-    int quantityOfElement;
-    cin >> quantityOfElement;
-    for (int i = 0; i < quantityOfElement; i++)
+    long long n, m, s, t, dis[N];
+    // freopen("input.txt","r",stdin);
+    // freopen("output.txt","w",stdout);
+    ios_base::sync_with_stdio(0);
+    cin.tie(0);
+    cout.tie(0);
+
+    cin >> n >> m;
+    for (long long i = 1; i <= m; i++)
     {
-        int element;
-        cin >> element;
-        myArray.push_back(element);
+        long long u, v, w;
+        cin >> u >> v >> w;
+        ed[u].push_back(make_pair(v, w));
     }
-    // printArray(myArray);
-    solution(0);
-    return 0;
+    cin >> s >> t;
+
+    set<pair<long long, long long>> st;
+    st.insert(make_pair(0, s));
+
+    for (long long i = 1; i <= n; i++)
+        dis[i] = inf;
+    dis[s] = 0;
+
+    while (!st.empty())
+    {
+        long long u = st.begin()->second;
+        st.erase(st.begin());
+
+        for (pair<long long, long long> tmp : ed[u])
+        {
+            long long v = tmp.first, w = tmp.second;
+
+            if (dis[v] > dis[u] + w)
+            {
+                st.erase(make_pair(dis[v], v));
+                dis[v] = dis[u] + w;
+                st.insert(make_pair(dis[v], v));
+            }
+        }
+    }
+
+    if (dis[t] == inf)
+        cout << "-1\n";
+    else
+        cout << dis[t] << '\n';
 }
