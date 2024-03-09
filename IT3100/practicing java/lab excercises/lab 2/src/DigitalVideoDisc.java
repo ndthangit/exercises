@@ -14,17 +14,17 @@ public class DigitalVideoDisc {
         this.category = category;
     }
 
-    public DigitalVideoDisc(String title, String category, String director) {
+    public DigitalVideoDisc(String title, String category, float cost) {
         this.title = title;
         this.category = category;
-        this.director = director;
+        this.cost = cost;
     }
 
-    public DigitalVideoDisc(String title, String category, String director, int length) {
+    public DigitalVideoDisc(String title, String category, String director, float cost) {
         this.title = title;
         this.category = category;
         this.director = director;
-        this.length = length;
+        this.cost = cost;
     }
 
     public DigitalVideoDisc(String title, String category, String director, int length, float cost) {

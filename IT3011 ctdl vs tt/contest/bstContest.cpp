@@ -45,50 +45,36 @@ node *makeNode(int value)
     return newNode;
 }
 
-// void insert(node *head, int value)
-// {
-//     if (head == NULL)
-//     {
-//         int element;
-//         cin >> element;
-//         head = makeNode(element);
-//         return;
-//     }
-//     if (head->key == value)
-//     {
-//         return;
-//     }
-
-//     if (head->key > value && head->leftChild == NULL)
-//     {
-//         head->leftChild = makeNode(value);
-//         return;
-//     }
-//     if (head->key < value && head->rightChild == NULL)
-//     {
-//         head->rightChild = makeNode(value);
-//         return;
-//     }
-//     if (head->key > value)
-//     {
-//         insert(head->leftChild, value);
-//     }
-//     else
-//         insert(head->rightChild, value);
-// }
-node *insert(node *head, int value)
+void insert(node *head, int value)
 {
     if (head == NULL)
     {
-        return makeNode(value);
+        int element;
+        cin >> element;
+        head = makeNode(element);
+        return;
+    }
+    if (head->key == value)
+    {
+        return;
+    }
+
+    if (head->key > value && head->leftChild == NULL)
+    {
+        head->leftChild = makeNode(value);
+        return;
+    }
+    if (head->key < value && head->rightChild == NULL)
+    {
+        head->rightChild = makeNode(value);
+        return;
     }
     if (head->key > value)
     {
-        head->leftChild = insert(head->leftChild, value);
+        insert(head->leftChild, value);
     }
     else
-        head->rightChild = insert(head->rightChild, value);
-    return head;
+        insert(head->rightChild, value);
 }
 void preOrder(node *head)
 {
