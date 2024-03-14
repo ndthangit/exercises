@@ -24,6 +24,9 @@ public class vecto {
         return new vecto(this.y * v.z - this.z * v.y, this.z * v.x - this.x * v.z, this.x * v.y - this.y * v.x);
     }
 
+    public vecto scale(double s) {
+        return new vecto(this.x * s, this.y * s, this.z * s);
+    }
     public double getX() {
         return x;
     }

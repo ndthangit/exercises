@@ -48,16 +48,24 @@ public class test {
                     vecto sum = v1.add(v2);
                     //System.out.println();
 
-                    System.out.println("the summary vector:"+sum.getX()+" "+sum.getY()+" "+sum.getZ());
+
+                    System.out.println("the summary vector:" + sum.getX() + " " + sum.getY() + " " + sum.getZ());
 
                     vecto sub = v1.sub(v2);
-                    System.out.println("the subtraction vector:"+sub.getX()+" "+sub.getY()+" "+sub.getZ());
+                    System.out.println("the subtraction vector:" + sub.getX() + " " + sub.getY() + " " + sub.getZ());
 
                     double dot = v1.dot(v2);
-                    System.out.println("the dot product:"+dot);
+                    System.out.println("the dot product:" + dot);
 
                     vecto cross = v1.cross(v2);
-                    System.out.println("the cross product:"+cross.getX()+" "+cross.getY()+" "+cross.getZ());
+                    System.out.println("the cross product:" + cross.getX() + " " + cross.getY() + " " + cross.getZ());
+
+                    double s;
+                    System.out.print("Enter the scale: ");
+                    s = scanner.nextDouble();
+                    vecto scale = v1.scale(s);
+                    System.out.println("the scale vector:" + scale.getX() + " " + scale.getY() + " " + scale.getZ());
+
 
                     break;
                 case 3:
@@ -68,7 +76,6 @@ public class test {
                     System.out.print("Enter the name of the employee: ");
                     tenNhanVien = scanner.nextLine();
                     scanner.nextLine();
-
 
                     System.out.print("Enter the basic salary: ");
                     luongCoBan = scanner.nextDouble();
