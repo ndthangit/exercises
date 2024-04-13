@@ -1,0 +1,5 @@
+lui $s0, 0x21a0
+ori $s0, $s0, 0x403b
+la $s1, 0x1234abcd
+li $s2, 0x21a0403b
+addi $s3, $0, 0x21a0403
