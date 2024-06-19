@@ -1,20 +1,20 @@
 package expandBT7;
 
-public abstract class Nhanvien {
-    private String trenNhanVien;
+public abstract class NhanVien {
+    private String tenNhanVien;
     private double LUONG_MAX;
 
-    public Nhanvien(String trenNhanVien, double LUONG_MAX) {
-        this.trenNhanVien = trenNhanVien;
+    public NhanVien(String tenNhanVien, double LUONG_MAX) {
+        this.tenNhanVien = tenNhanVien;
         this.LUONG_MAX = LUONG_MAX;
     }
 
-    public String getTrenNhanVien() {
-        return trenNhanVien;
+    public String getTenNhanVien() {
+        return tenNhanVien;
     }
 
-    public void setTrenNhanVien(String trenNhanVien) {
-        this.trenNhanVien = trenNhanVien;
+    public void setTenNhanVien(String trenNhanVien) {
+        this.tenNhanVien = tenNhanVien;
     }
 
     public double getLUONG_MAX() {
