@@ -1,10 +1,16 @@
-public class child extends mother{
+public class child extends member {
+
     public child(String name) {
         super(name);
     }
 
     @Override
-    public void print() {
-        System.out.println("I am the child"+name);
+    protected void print() {
+        super.print();
+    }
+
+    public String setName() {
+        System.out.println("I am the child "+id);
+        return name;
     }
 }
