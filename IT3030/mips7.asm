@@ -1,0 +1,3 @@
+lui $s0, 0x2233
+ori $s0, $s0, 0x89CD
+andi $s1, $s0, 0xFF
