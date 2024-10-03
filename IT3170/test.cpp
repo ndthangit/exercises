@@ -1,17 +1,8 @@
-#include <bits/stdc++.h>
+#include<iostream>
+#include<vector>
 using namespace std;
-
-// Driver program to test above functions
-int main()
-{
-    ios_base::sync_with_stdio(false);
-    cin.tie(NULL);
-
-    stack<int> s;
-    int n=0;
-    s.push(n++);
-    cout<< s.top();
-    return 0;
+int main(){
+    int i=4;
+    int
+    cout<<++i;
 }
-
-// This code is contributed by rathbhupendra
