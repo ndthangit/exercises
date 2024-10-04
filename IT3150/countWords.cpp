@@ -1,27 +1,43 @@
 #include <iostream>
 #include <string>
 #include <cctype>
+using namespace std;
 
-int countWords(const std::string& text) {
+int countWords(const string &text)
+{
     int wordCount = 0;
     bool inWord = false;
-    for (char c : text) {
-        if (!std::isspace(c)) {
-            if (!inWord) {
+    for (char c : text)
+    {
+        if (!isspace(c))
+        {
+            if (!inWord)
+            {
                 inWord = true;
                 wordCount++;
             }
-        } else {
+        }
+        else
+        {
             inWord = false;
         }
     }
     return wordCount;
 }
 
-int main() {
-    std::string inputText;
-    std::getline(std::cin, inputText);
-    int wordCount = countWords(inputText);
-    std::cout << wordCount << std::endl;
+int main()
+{
+    string inputText;
+    int n = 20;
+
+    int sum = 0;
+    while (n > 0)
+    {
+        getline(cin, inputText);
+        int wordCount = countWords(inputText);
+        sum += wordCount;
+        n--;
+    }
+    cout << sum;
     return 0;
 }

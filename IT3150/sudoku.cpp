@@ -35,11 +35,12 @@ bool check(vector<vector<int>> &table, int row, int column, int num)
 {
     for (int i = 0; i < 9; i++)
     {
-        if (table[row][i] == num || table[i][column])
+        if (table[row][i] == num || table[i][column] == num)
         {
             return false;
         }
     }
+
     int startRow = row - row % 3;
     int startCol = column - column % 3;
 
@@ -84,7 +85,6 @@ void countSudokuSolution(vector<vector<int>> &table, int row, int column, int &c
 }
 int main()
 {
-
     vector<vector<int>> table(9, vector<int>(9));
     for (int i = 0; i < 9; i++)
     {
@@ -93,8 +93,9 @@ int main()
             cin >> table[i][j];
         }
     }
-    int count=0;
+    int count = 0;
     countSudokuSolution(table, 0, 0, count);
-    cout<< count;
+    cout << count;
+
     return 0;
 }
