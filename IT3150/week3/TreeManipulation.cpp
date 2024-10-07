@@ -2,7 +2,7 @@
 Mỗi nút trên cây có trường id (identifier) là một số nguyên (id của các nút trên cây đôi một khác nhau)
 Thực hiện 1 chuỗi các hành động sau đây bao gồm các thao tác liên quan đến xây dựng cây và duyệt cây
 · MakeRoot u: Tạo ra nút gốc u của cây
-· Insert u v: tạo mới 1 nút u và chèn vào cuối danh sách nút con của nút v (nếu nút có id bằng v không tồn tại hoặc nút có id bằng u đã tồn tại thì không chèn thêm mới)
+· Insert v u: tạo mới 1 nút u và chèn vào cuối danh sách nút con của nút v (nếu nút có id bằng v không tồn tại hoặc nút có id bằng u đã tồn tại thì không chèn thêm mới)
 · PreOrder: in ra thứ tự các nút trong phép duyệt cây theo thứ tự trước
 · InOrder: in ra thứ tự các nút trong phép duyệt cây theo thứ tự giữa
 · PostOrder: in ra thứ tự các nút trong phép duyệt cây theo thứ tự sau
@@ -43,7 +43,7 @@ typedef int dataType;
 typedef struct node
 {
     dataType identification;
-    node *rightChild;
+    node *rightSibling;
     node *leftChild;
 } node;
 
@@ -52,7 +52,7 @@ node *makeTree(dataType value)
     node *newNode = (node *)malloc(sizeof(node));
     newNode->identification = value;
     newNode->leftChild = NULL;
-    newNode->rightChild = NULL;
+    newNode->rightSibling = NULL;
     return newNode;
 }
 node *makeNode(dataType value)
@@ -60,7 +60,7 @@ node *makeNode(dataType value)
     node *newNode = (node *)malloc(sizeof(node));
     newNode->identification = value;
     newNode->leftChild = NULL;
-    newNode->rightChild = NULL;
+    newNode->rightSibling = NULL;
     return newNode;
 }
 node *findNode(node *tree, dataType value)
@@ -81,35 +81,23 @@ node *findNode(node *tree, dataType value)
         return leftResult;
     }
 
-    node *rightResult = findNode(tree->rightChild, value);
+    node *rightResult = findNode(tree->rightSibling, value);
     return rightResult;
 }
-void addLeft(node *tree, dataType childNode, dataType parentNode)
-{
-    node *parent = findNode(tree, parentNode);
-    if (parent != NULL && parent->leftChild ==NULL)
-    {
-        node *newNode = makeNode(childNode);
-        parent->leftChild = newNode;
-    }
-}
-void addRight(node *tree, dataType childNode, dataType parentNode)
-{
-    node *parent = findNode(tree, parentNode);
-    if (parent != NULL&& parent->rightChild ==NULL)
-    {
-        node *newNode = makeNode(childNode);
-        parent->rightChild = newNode;
-    }
-}
+
 void preOrder(node *tree, queue<dataType> &array)
 {
     if (tree == NULL)
         return;
 
     array.push(tree->identification);
-    preOrder(tree->leftChild, array);
-    preOrder(tree->rightChild, array);
+
+    node *ptr = tree->leftChild;
+    while (ptr != NULL)
+    {
+        preOrder(ptr, array);
+        ptr = ptr->rightSibling;
+    }
 }
 
 void inOrder(node *tree, queue<dataType> &array)
@@ -119,10 +107,29 @@ void inOrder(node *tree, queue<dataType> &array)
         return;
     }
 
-    inOrder(tree->leftChild, array);
+    node *ptr = tree->leftChild;
+    inOrder(ptr, array);
     array.push(tree->identification);
-    inOrder(tree->rightChild, array);
+
+    if (ptr != NULL)
+        ptr = ptr->rightSibling;
+    while (ptr != NULL)
+    {
+        inOrder(ptr,array);
+        ptr = ptr->rightSibling;
+    }
 }
+// void inOrder(node *tree, queue<dataType> &array)
+// {
+//     if (tree == NULL)
+//     {
+//         return;
+//     }
+
+//     inOrder(tree->leftChild, array);
+//     array.push(tree->identification);
+//     inOrder(tree->rightSibling, array);
+// }
 void postOrder(node *tree, queue<dataType> &array)
 {
     if (tree == NULL)
@@ -130,9 +137,45 @@ void postOrder(node *tree, queue<dataType> &array)
         return;
     }
 
-    postOrder(tree->leftChild, array);
-    postOrder(tree->rightChild, array);
+    node *ptr = tree->leftChild;
+    while (ptr != NULL)
+    {
+        postOrder(ptr,array);
+        ptr = ptr->rightSibling;
+    }
+
     array.push(tree->identification);
+}
+// void postOrder(node *tree, queue<dataType> &array)
+// {
+//     if (tree == NULL)
+//     {
+//         return;
+//     }
+
+//     postOrder(tree->leftChild, array);
+//     postOrder(tree->rightSibling, array);
+//     array.push(tree->identification);
+// }
+
+void insertNode(node *tree, dataType childNode, dataType parentNode)
+{
+    node *parent = findNode(tree, parentNode);
+    if (parent->leftChild == NULL)
+    {
+        node *newNode = makeNode(childNode);
+        parent->leftChild = newNode;
+    }
+    else
+    {
+        parent = parent->leftChild;
+        while (parent->rightSibling != NULL)
+        {
+            parent = parent->rightSibling;
+        }
+        node *newNode = makeNode(childNode);
+        parent->rightSibling = newNode;
+    }
 }
 int main()
 {
@@ -146,19 +189,13 @@ int main()
         {
             int originalValue;
             cin >> originalValue;
-            tree = makeTree(originalValue);
+            tree = makeTree( originalValue);
         }
-        else if (strcmp(control, "AddRight") == 0)
+        else if (strcmp(control, "Insert") == 0)
         {
             int parent, valueDescendant;
             cin >> valueDescendant >> parent;
-            addRight(tree, valueDescendant, parent);
-        }
-        else if (strcmp(control, "AddLeft") == 0)
-        {
-            int parent, valueDescendant;
-            cin >> valueDescendant >> parent;
-            addLeft(tree, valueDescendant, parent);
+            insertNode(tree, valueDescendant, parent);
         }
         else if (strcmp(control, "InOrder") == 0)
         {
