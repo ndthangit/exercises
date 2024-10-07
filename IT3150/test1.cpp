@@ -4,23 +4,17 @@
 #include <string>
 using namespace std;
 
+void vidu(int x, int &y, int &z)
+{
+    x += 10;
+    y += 15;
+    z += 2;
+}
 int main()
 {
-    string s;
-    int n = 400;
 
-    while (n > 0)
-    {
-        getline(cin, s);
-
-        for (char &c : s)
-        {
-            c = toupper(c);
-        }
-        cout << s << endl;
-
-        n--;
-    }
-
+    int x = 2, y = 3, z = 4;
+    vidu(y, z, x);
+    cout << x <<" "<< y<<" " << z;
     return 0;
 }
