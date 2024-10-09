@@ -1,9 +1,5 @@
 /*
-There are n passengers 1, 2, …, n. The passenger i want to travel from point i to point i + n (i = 1,2,…,n).
- There is a bus located at point 0 and has k places for transporting the passengers
-  (it means at any time, there are at most k passengers on the bus).
-  You are given the distance matrix c in which c(i,j) is the traveling distance from point i to point j (i, j = 0,1,…, 2n).
-   Compute the shortest route for the bus, serving n passengers and coming back to point 0.
+There are n passengers 1, 2, …, n. The passenger i want to travel from point i to point i + n (i = 1,2,…,n). There is a bus located at point 0 and has k places for transporting the passengers (it means at any time, there are at most k passengers on the bus). You are given the distance matrix c in which c(i,j) is the traveling distance from point i to point j (i, j = 0,1,…, 2n). Compute the shortest route for the bus, serving n passengers and coming back to point 0.
 Input
 Line 1 contains n and k (1≤n≤11,1≤k≤10)
  Line i+1 (i=1,2,…,2n+1) contains the (i−1)
@@ -27,89 +23,87 @@ Output
 
 #include <bits/stdc++.h>
 using namespace std;
-
-vector<int> route;
 vector<bool> visited;
+vector<int> route;
+int n,k;
+int passenger;
 
-int getMin(int a, int b) { return (a < b) ? a : b; }
-
-bool check(int toPoint, int n, int k, int &passenger)
+bool check(int point, int toPoint)
 {
-    if (toPoint <= n && passenger > k - 1)
-        return false;
-    if (toPoint > n ){
-        if(visited[toPoint - n] == false)
+    if (toPoint <= n)
+    {
+        if (passenger >= k)
+        {
+            return false;
+        }
+    }
+    else
+    {
+        if (!visited[toPoint - n])
             return false;
     }
-    if(visited[toPoint]==true)
+
+    if (visited[toPoint])
         return false;
+
     return true;
 }
-
-void solve(vector<vector<int>> &distance, int n, int &minRoute, int &curRoute, int pointTH, int k, int &passenger)
+int getMin(int a, int b)
 {
-    cout << pointTH;
-    if (pointTH == 2 * n + 1)
+    return (a < b) ? a : b;
+}
+void solve(vector<vector<int>> &distance, int point, int &curRoute, int &minRoute)
+{
+    if (point == 2 * n + 1)
     {
-        minRoute = getMin(minRoute, curRoute + distance[route[2 * n]][0]);
+        minRoute = getMin(minRoute, curRoute + distance[route[point - 1]][0]);
         return;
     }
-
-    for (int i = 1; i < 2 * n + 1; i++)
+    else
     {
-        if (check(i, n, k,passenger))
+        for (int i = 1; i < 2 * n + 1; i++)
         {
-            cout <<" to ";
-            route[pointTH + 1] = i;
-            visited[i] = true;
-            if (i <= n)
-                passenger++;
-            else
-                passenger--;
-
-            curRoute += distance[route[pointTH - 1]][i];
-            solve(distance, n, minRoute, curRoute, pointTH + 1, k, passenger);
-            curRoute -= distance[route[pointTH - 1]][i];
-
-            visited[i] = false;
-            if (i <= n)
-                passenger--;
-            else
-                passenger++;
-            route[pointTH + 1] = -1;
+            if (check(route[point], i) && (curRoute + distance[route[point - 1]][i]) <= minRoute)
+            {
+                route[point] = i;
+                visited[i] = true;
+                if (i <= n)
+                    passenger++;
+                else
+                    passenger--;
+                curRoute += distance[route[point - 1]][i];
+                solve(distance, point + 1, curRoute, minRoute);
+                curRoute -= distance[route[point - 1]][i];
+                visited[i] = false;
+                if (i <= n)
+                    passenger--;
+                else
+                    passenger++;
+            }
         }
     }
 }
 
 int main()
 {
-    ios_base::sync_with_stdio(false);
-    cin.tie(NULL);
-
-    int n, k;
     cin >> n >> k;
-    route.resize(2 * n + 1, -1);
-    visited.resize(2 * n + 2, false);
+    visited.resize(2 * n + 1, false);
+    route.resize(2 * n + 1);
     vector<vector<int>> distance(2 * n + 1, vector<int>(2 * n + 1));
-    for (int i = 0; i <= 2 * n; i++)
+    for (int i = 0; i < 2 * n + 1; i++)
     {
-        for (int j = 0; j <= 2 * n; j++)
+        for (int j = 0; j < 2 * n + 1; j++)
         {
             cin >> distance[i][j];
         }
     }
-    int minRoute = INT_MAX;
-    int curRoute = 0;
     route[0] = 0;
     visited[0] = true;
-    int passenger = 0;
+    // cout << getMin(1, 2);
+    int minRoute = 999999;
+    int curRoute = 0;
 
-    // for (int i = 0; i < 2*n+1; i++)
-    // {
-    //     cout<< check(i, n, k,passenger) <<endl;    
-    // }
-    
-    solve(distance, n, minRoute, curRoute, 0, k, passenger);
-    cout << minRoute << endl;
+    solve(distance, 1, curRoute, minRoute);
+    cout << minRoute;
     return 0;
 }
