@@ -5,11 +5,14 @@ int main(){
     // a=4;
     // b= a;
     // a++;
-    int a= 4;
-    int *b;
-    b=&a;
-    (*b)++;
-    printf("%d\n",*b);
+    // int a= 4;
+    // int *b;
+    // b= &a;
+    // // (*b)++;
+    // printf("%d\n",*b);
 
-    printf("%d",a);
+    // printf("%d",a);
+    int j,a[5]={1,2,3,4,5},*p;
+    p=a+1;
+    printf("%d",*p);
 }
