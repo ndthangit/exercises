@@ -38,6 +38,6 @@ int main()
         printf(" %lu\n", ptr1[i]);
     }
     
-
+    
     return 0;
 }
