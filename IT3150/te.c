@@ -1,9 +1,4 @@
-#include <iostream>
-#include <vector>
-#include <cmath>
-#include <string>
-using namespace std;
-
+#include<stdio.h>
 int reallocCub(float ***Mc, int mo, int ro, int co, int mn,int rn,int cn) {
   float ***M = new float **[mn];
   if (M) {
@@ -25,11 +20,10 @@ int reallocCub(float ***Mc, int mo, int ro, int co, int mn,int rn,int cn) {
    }
    else return 0;
       }  
-int main()
-{
-
-    int x = 2, y = 3, z = 4;
-    vidu(y, z, x);
-    cout << x <<" "<< y<<" " << z;
-    return 0;
+int main() {
+   int i = 10, *p;
+   p = &i;        // p points to the address of i
+   i = f(--i, *p--); // --i decrements i to 9, *p returns 10 before p is decremented
+   printf("%d\n", i); // i becomes 9 + 10 = 19
+   return 0;
 }
