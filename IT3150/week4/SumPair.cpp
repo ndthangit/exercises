@@ -13,3 +13,31 @@ Dữ liệu
 Kết quả
 2
 */
+#include<bits/stdc++.h>
+#include<algorithm>
+using namespace std;
+int n,m;
+vector<int> arr;
+
+int solve(){
+    int dem=0;
+    unordered_set<int> a;
+    for( int i= 0;i<n;i++){
+
+        if(a.find(m-arr[i]) != a.end()){
+            dem++;
+
+        }
+        a.insert(arr[i]);
+    }
+    return dem;
+}
+int main(){
+    cin>> n>>m;
+    arr.resize(n);
+    for( int i=0; i< n;i++){
+        cin>> arr[i];
+    }
+    cout<< solve();
+    return 0;
+}

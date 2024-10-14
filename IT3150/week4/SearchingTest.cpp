@@ -15,3 +15,27 @@ output
 1
 1
 */
+#include<bits/stdc++.h>
+using namespace std;
+vector<int> arr;
+int n;
+void solve(){
+
+    unordered_set<int> a;
+    for(int i=0;i<n;i++){
+        if(a.find(arr[i]) != a.end() ){
+            cout<< 1<< endl;
+        } else cout<< 0<< endl;
+        a.insert(arr[i]);
+    }
+    return;
+}
+int main(){
+    cin>> n;
+    arr.resize(n);
+    for(int i=0;i<n;i++){
+        cin>> arr[i];
+    }
+    solve();
+    return 0;
+}
