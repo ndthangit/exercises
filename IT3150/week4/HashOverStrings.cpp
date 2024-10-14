@@ -5,7 +5,7 @@ k-1
  + s[2]*256
 k-2
  + . . . + s[k]*256
-0 
+0
 ) mod m  (the contant integer m is a parameter)
 Given a sequence of strings k1, k2, …, kn, compute the corresponding hash codes
 Input
@@ -26,3 +26,28 @@ Output
 179
 924
 */
+#include <iostream>
+#include <string>
+using namespace std;
+
+int compute_hash(const string& s, int m) {
+    long long hash_value = 0;
+    int base = 256;
+    for (char c : s) {
+        hash_value = (hash_value * base + c) % m;
+    }
+    return hash_value;
+}
+
+int main() {
+    int n, m;
+    cin >> n >> m;
+
+    for (int i = 0; i < n; i++) {
+        string s;
+        cin >> s;
+        cout << compute_hash(s, m) << endl;
+    }
+
+    return 0;
+}
