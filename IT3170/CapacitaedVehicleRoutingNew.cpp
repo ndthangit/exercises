@@ -1,6 +1,6 @@
 #include<bits/stdc++.h>
 using namespace std;
-int num_trucks, capacity, num_clients, disMin= INT_MAX, dis0Min= INT_MAX;
+int num_trucks, capacity, num_clients, disMin= INT_MAX, dis0Min = INT_MAX;
 vector<int> request;
 vector<bool> visited;
 
@@ -110,7 +110,7 @@ int main(){
         }
     }
     for (int i=1; i<= num_clients;i++) {
-        dis0Min= min(dis0Min, dis[i][0]);
+        dis0Min = min(dis0Min, dis[i][0]);
     }
 //    cout<< disMin;
     int start =num_trucks+1;
