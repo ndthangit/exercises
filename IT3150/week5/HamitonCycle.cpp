@@ -35,3 +35,141 @@ Output
 0
 1
 */
+#include <iostream>
+#include <vector>
+#include <algorithm>
+
+using namespace std;
+
+// Backtracking function to check for Hamiltonian cycle
+bool isHamiltonianCycle(const vector<vector<int>>& graph, vector<int>& path, int pos) {
+    int n = graph.size();
+    // Base case: If all vertices are included in the path, check if there is an edge back to the start
+    if (pos == n) {
+        return find(graph[path[pos - 1]].begin(), graph[path[pos - 1]].end(), path[0]) != graph[path[pos - 1]].end();
+    }
+
+    // Try different vertices as the next candidate in the Hamiltonian cycle
+    for (int vertex = 1; vertex < n; vertex++) {
+        // Check if vertex is not already in the path and is adjacent to the last vertex in the path
+        if (find(path.begin(), path.begin() + pos, vertex) == path.begin() + pos &&
+            find(graph[path[pos - 1]].begin(), graph[path[pos - 1]].end(), vertex) != graph[path[pos - 1]].end()) {
+            path[pos] = vertex;
+            if (isHamiltonianCycle(graph, path, pos + 1)) {
+                return true;
+            }
+            // Backtrack
+            path[pos] = -1;
+        }
+    }
+    return false;
+}
+
+// Function to check if the graph has a Hamiltonian cycle
+bool hasHamiltonianCycle(int n, const vector<pair<int, int>>& edges) {
+    // Build adjacency list
+    vector<vector<int>> graph(n);
+    for (const auto& edge : edges) {
+        graph[edge.first - 1].push_back(edge.second - 1);
+        graph[edge.second - 1].push_back(edge.first - 1);
+    }
+
+    // Initialize path with starting vertex
+    vector<int> path(n, -1);
+    path[0] = 0; // Start from vertex 0
+
+    // Use backtracking to check for Hamiltonian cycle
+    return isHamiltonianCycle(graph, path, 1);
+}
+
+int main() {
+    int T;
+    cin >> T;
+    vector<int> results;
+
+    for (int t = 0; t < T; t++) {
+        int n, m;
+        cin >> n >> m;
+        vector<pair<int, int>> edges(m);
+
+        for (int i = 0; i < m; i++) {
+            int u, v;
+            cin >> u >> v;
+            edges[i] = {u, v};
+        }
+
+        // Check if the graph is Hamiltonian and store the result
+        results.push_back(hasHamiltonianCycle(n, edges) ? 1 : 0);
+    }
+
+    // Output results
+    for (int result : results) {
+        cout << result << endl;
+    }
+
+    return 0;
+}
+#include <iostream>
+#include <vector>
+#include <algorithm>
+
+using namespace std;
+
+bool isHamiltonianCycle(const vector<vector<int>>& graph, vector<int>& path, int pos) {
+    int n = graph.size();
+    if (pos == n) {
+        return find(graph[path[pos - 1]].begin(), graph[path[pos - 1]].end(), path[0]) != graph[path[pos - 1]].end();
+    }
+
+    for (int vertex = 1; vertex < n; vertex++) {
+        if (find(path.begin(), path.begin() + pos, vertex) == path.begin() + pos &&
+            find(graph[path[pos - 1]].begin(), graph[path[pos - 1]].end(), vertex) != graph[path[pos - 1]].end()) {
+            path[pos] = vertex;
+            if (isHamiltonianCycle(graph, path, pos + 1)) {
+                return true;
+            }
+            path[pos] = -1;
+        }
+    }
+    return false;
+}
+
+bool hasHamiltonianCycle(int n, const vector<pair<int, int>>& edges) {
+    vector<vector<int>> graph(n);
+    for (const auto& edge : edges) {
+        graph[edge.first - 1].push_back(edge.second - 1);
+        graph[edge.second - 1].push_back(edge.first - 1);
+    }
+
+    vector<int> path(n, -1);
+    path[0] = 0; 
+
+    return isHamiltonianCycle(graph, path, 1);
+}
+
+int main() {
+    int T;
+    cin >> T;
+    vector<int> results;
+
+    for (int t = 0; t < T; t++) {
+        int n, m;
+        cin >> n >> m;
+        vector<pair<int, int>> edges(m);
+
+        for (int i = 0; i < m; i++) {
+            int u, v;
+            cin >> u >> v;
+            edges[i] = {u, v};
+        }
+
+        results.push_back(hasHamiltonianCycle(n, edges) ? 1 : 0);
+    }
+
+    for (int result : results) {
+        cout << result << endl;
+    }
+
+    return 0;
+}
+

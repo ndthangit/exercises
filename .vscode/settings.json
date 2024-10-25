@@ -6,7 +6,11 @@
         "deque": "cpp",
         "string": "cpp",
         "vector": "cpp",
-        "iosfwd": "cpp"
+        "iosfwd": "cpp",
+        "*.tcc": "c",
+        "cmath": "c",
+        "complex": "c",
+        "random": "c"
     },
     "C_Cpp.errorSquiggles": "disabled",
     "cSpell.words": [
