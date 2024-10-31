@@ -29,3 +29,84 @@ Input
 6 4 10
 Output
 17*/
+
+#include<bits/stdc++.h>
+using namespace std;
+
+const long long limit = 1e5 + 5;
+vector<pair<long long, long long>> graph[limit];
+vector<vector<long long>> allPaths;
+
+
+long long *findElement(long long startNode, long long endNode)
+{
+    for (auto &element : graph[startNode])
+    {
+        if (element.first == endNode)
+            return &element.second;
+    }
+    return nullptr;
+}
+
+void bfs(long long startNode, long long endNode, long long quantityOfVertex) {
+    queue<vector<long long>> q;
+    q.push({startNode});
+
+    while (!q.empty()) {
+        vector<long long> path = q.front();
+        q.pop();
+
+        long long node = path.back();
+
+        if (node == endNode) {
+            allPaths.push_back(path);
+        }
+
+        for (auto &edge : graph[node]) {
+            long long nextNode = edge.first;
+            vector<long long> newPath(path);
+                newPath.push_back(nextNode);
+                q.push(newPath);
+        }
+
+    }
+}
+
+int main() {
+    ios_base::sync_with_stdio(0);
+    cin.tie(0);
+    cout.tie(0);
+
+    long long quantityOfVertex, quantityOfEdges;
+    cin >> quantityOfVertex >> quantityOfEdges;
+    long long startNode, endNode;
+    cin >> startNode >> endNode;
+    startNode--;
+    endNode--;
+
+    for (long long i = 0; i < quantityOfEdges; i++) {
+        long long firstVertex, secondVertex, distance;
+        cin >> firstVertex >> secondVertex >> distance;
+        graph[firstVertex - 1].emplace_back(secondVertex - 1, distance);
+    }
+
+    bfs(startNode, endNode, quantityOfVertex);
+
+    long long maxFlow =0;
+    for ( auto path : allPaths){
+        long long add = *findElement(path[0], path[1]);
+        for( long long i=1;i<path.size()-1;i++){
+            add = min(add, *findElement(path[i], path[i+1]));
+        }
+        maxFlow+= add;
+        for( long long i=0;i<path.size()-1;i++){
+            *findElement(path[i], path[i+1]) -= add;
+        }
+
+    }
+    cout<< maxFlow;
+
+    return 0;
+}
+
+
