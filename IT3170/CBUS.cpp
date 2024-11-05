@@ -23,9 +23,11 @@ Output
 
 #include <bits/stdc++.h>
 using namespace std;
+
 vector<bool> visited;
 vector<int> route;
-int n,k;
+vector<int> bestRoute;
+int n, k;
 int passenger;
 
 bool check(int point, int toPoint)
@@ -48,15 +50,22 @@ bool check(int point, int toPoint)
 
     return true;
 }
+
 int getMin(int a, int b)
 {
     return (a < b) ? a : b;
 }
+
 void solve(vector<vector<int>> &distance, int point, int &curRoute, int &minRoute)
 {
     if (point == 2 * n + 1)
     {
-        minRoute = getMin(minRoute, curRoute + distance[route[point - 1]][0]);
+        int totalDistance = curRoute + distance[route[point - 1]][0];
+        if (totalDistance < minRoute)
+        {
+            minRoute = totalDistance;
+            bestRoute = route; // Save the best route found so far
+        }
         return;
     }
     else
@@ -72,7 +81,9 @@ void solve(vector<vector<int>> &distance, int point, int &curRoute, int &minRout
                 else
                     passenger--;
                 curRoute += distance[route[point - 1]][i];
+                
                 solve(distance, point + 1, curRoute, minRoute);
+                
                 curRoute -= distance[route[point - 1]][i];
                 visited[i] = false;
                 if (i <= n)
@@ -89,7 +100,9 @@ int main()
     cin >> n >> k;
     visited.resize(2 * n + 1, false);
     route.resize(2 * n + 1);
+    bestRoute.resize(2 * n + 1);
     vector<vector<int>> distance(2 * n + 1, vector<int>(2 * n + 1));
+    
     for (int i = 0; i < 2 * n + 1; i++)
     {
         for (int j = 0; j < 2 * n + 1; j++)
@@ -97,13 +110,33 @@ int main()
             cin >> distance[i][j];
         }
     }
+    
     route[0] = 0;
     visited[0] = true;
-    // cout << getMin(1, 2);
-    int minRoute = 999999;
+    
+    int minRoute = INT_MAX;
     int curRoute = 0;
 
     solve(distance, 1, curRoute, minRoute);
-    cout << minRoute;
+
+    // Output the minimum route distance
+    cout << "Minimum route distance: " << minRoute << endl;
+    
+    // Output the best route
+    cout << "Best route: ";
+    for (int i = 0; i < 2 * n + 1; i++)
+    {
+        cout << bestRoute[i] << " ";
+    }
+    cout << endl;
+
+    // Output the distances between each consecutive point in the best route
+    cout << "Route distances: ";
+    for (int i = 0; i < 2 * n; i++)
+    {
+        cout << distance[bestRoute[i]][bestRoute[i + 1]] << " ";
+    }
+    cout << endl;
+
     return 0;
 }
