@@ -51,93 +51,97 @@ T000010010 T000010020 T000010030 T000010040
 4500
 1
 */
-
 #include <bits/stdc++.h>
 using namespace std;
 
-struct Transaction {
-    string from_account;
-    string to_account;
-    int money;
-    string time_point;
-    string atm;
-};
+int total_transactions = 0;
+int total_money_transaction = 0;
+map<string, int> from_transactions;
+set<string> unique_accounts;
+unordered_map<string, vector<string>> graph;
 
-bool findCycle(const unordered_map<string, vector<string>>& graph, const string& start_account, int k,int depth, set<string>& visited) {
-    
-    if (depth == k) {
-        return true;
+bool inspect_cycle_k(const string &start, const string &currentAccount, int k, int depth, set<string> visited)
+{
+    if (depth == k)
+    {
+        return currentAccount == start;
     }
+    visited.insert(currentAccount);
 
-    visited.insert(start_account);
-
-    for (const string& next_account : graph.at(start_account)) {
-        if (next_account == start_account && depth == k - 1) { 
+    for (const auto &neighbor : graph[currentAccount])
+    {
+        if (neighbor == start && depth + 1 == k)
             return true;
-        }
-        if (visited.find(next_account) == visited.end()) { 
-            if (findCycle(graph, next_account, k, depth + 1, visited)) {
+
+        if (visited.find(neighbor) == visited.end())
+            if (has_cycle_of_length_k(start, neighbor, k, depth + 1, visited))
                 return true;
-            }
-        }
     }
 
-    visited.erase(start_account); 
+    visited.erase(currentAccount);
     return false;
 }
 
-int main() {
-    vector<Transaction> transactions;
-    unordered_map<string, int> total_money_from;
-    unordered_map<string, vector<string>> graph;
-    set<string> all_accounts;
-    int total_money_transaction = 0;
-
+int main()
+{
     string line;
-    while (getline(cin, line) && line != "#") {
-        istringstream iss(line);
-        Transaction transaction;
-        iss >> transaction.from_account >> transaction.to_account >> transaction.money >> transaction.time_point >> transaction.atm;
+    while (getline(cin, line))
+    {
+        if (line == "#")
+            break;
 
-        transactions.push_back(transaction);
-        total_money_transaction += transaction.money;
+        stringstream ss(line);
+        string from_account, to_account, time_point, atm;
+        int money;
+        ss >> from_account >> to_account >> money >> time_point >> atm;
 
-        total_money_from[transaction.from_account] += transaction.money;
-        graph[transaction.from_account].push_back(transaction.to_account);
+        total_transactions++;
+        total_money_transaction += money;
 
-        all_accounts.insert(transaction.from_account);
-        all_accounts.insert(transaction.to_account);
+        from_transactions[from_account] += money;
+
+        unique_accounts.insert(from_account);
+        unique_accounts.insert(to_account);
+        graph[from_account].push_back(to_account);
     }
 
-    while (getline(cin, line) && line != "#") {
-        istringstream iss(line);
+    while (getline(cin, line))
+    {
+        if (line == "#")
+            break;
+
+        stringstream ss(line);
         string query;
-        iss >> query;
-
-        if (query == "?number_transactions") {
-            cout << transactions.size() << endl;
-
-        } else if (query == "?total_money_transaction") {
+        ss >> query;
+        if (query == "?number_transactions")
+        {
+            cout << total_transactions << endl;
+        }
+        else if (query == "?total_money_transaction")
+        {
             cout << total_money_transaction << endl;
-
-        } else if (query == "?list_sorted_accounts") {
-            for (const auto& account : all_accounts) {
+        }
+        else if (query == "?list_sorted_accounts")
+        {
+            for (const auto &account : unique_accounts)
                 cout << account << " ";
-            }
             cout << endl;
-
-        } else if (query == "?total_money_transaction_from") {
-            string account;
-            iss >> account;
-            cout << total_money_from[account] << endl;
-
-        } else if (query == "?inspect_cycle") {
-            string account;
+        }
+        else if (query == "?total_money_transaction_from")
+        {
+            string transaction_from_account;
+            ss >> transaction_from_account;
+            cout << from_transactions[transaction_from_account] << endl;
+        }
+        else if (query == "?inspect_cycle")
+        {
+            string inspect_cycle_account;
             int k;
-            iss >> account >> k;
+            ss >> inspect_cycle_account >> k;
 
             set<string> visited;
-            cout << findCycle(graph, account, k, 0, visited) << endl;
+            bool has_cycle = inspect_cycle_k(inspect_cycle_account, inspect_cycle_account, k, 0, visited);
+            cout << (has_cycle ? 1 : 0) << endl;
         }
     }
 
