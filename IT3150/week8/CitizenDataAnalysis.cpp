@@ -53,3 +53,117 @@ Output
 6
 4
 0*/
+#include <bits/stdc++.h>
+
+using namespace std;
+
+struct Citizen
+{
+    string code;
+    string date_of_birth;
+    string father_code;
+    string mother_code;
+    char is_alive;
+    string region_code;
+};
+
+int toInt(string s) {
+    int result = 0, multiplier = 1;
+    for (int i = s.size() - 1; i >= 0; i--) {
+        result += (s[i] - '0') * multiplier;
+        multiplier *= 10;
+    }
+    return result;
+}
+
+int main()
+{
+    vector<Citizen> citizenList;
+    map<string,int> numPeopleBorn;
+    string line;
+
+    while (getline(cin, line) && line != "*")
+    {
+        stringstream ss(line);
+        Citizen citizen;
+        ss >> citizen.code >> citizen.date_of_birth >> citizen.father_code >> citizen.mother_code >> citizen.is_alive >> citizen.region_code;
+
+
+        citizenList.push_back(citizen);
+        numPeopleBorn[citizen.date_of_birth]++;
+
+
+        if (citizen.father_code != "0000000")
+        {
+            relationships[citizen.code].insert(citizen.father_code);
+            relationships[citizen.father_code].insert(citizen.code);
+        }
+        if (citizen.mother_code != "0000000")
+        {
+            relationships[citizen.code].insert(citizen.mother_code);
+            relationships[citizen.mother_code].insert(citizen.code);
+        }
+    }
+    sort(citizenList.begin(), citizenList.end(),[](const Citizen& a, const Citizen)
+    {
+        return a.date_of_birth< b.date_of_birth
+    });
+    auto findFirstIndex = [&](const string& time) {
+        return lower_bound(citizenList.begin(), citizenList.end(), time, [](const Citizen& city, const string& time) {
+            return city.date_of_birth < time;
+        }) - citizenList.begin();
+    };
+
+    auto findLastIndex = [&](const string& time) {
+        auto it = upper_bound(citizenList.begin(), citizenList.end(), time, [](const string& time, const Citizen& city) {
+            return time < city.date_of_birth;
+        });
+        return it == citizenList.begin() ? -1 : it - citizenList.begin() - 1;
+    };
+
+    // Process queries
+    while (getline(cin, line) && line != "***")
+    {
+        stringstream ss(line);
+        string query;
+        ss >> query;
+
+        if (query == "NUMBER_PEOPLE")
+        {
+            cout << citizens.size() << endl;
+        }
+        else if (query == "NUMBER_PEOPLE_BORN_AT")
+        {
+            string date;
+            ss >> date;
+            cout << numPeopleBorn[date] << endl;
+        }
+        else if (query == "MOST_ALIVE_ANCESTOR")
+        {
+            string code;
+            ss >> code;
+            cout<< maxAncestorAge[toInt(code)]<< endl;
+
+        }
+        else if (query == "NUMBER_PEOPLE_BORN_BETWEEN")
+        {
+            string fromTime, toTime;
+            ss >> fromTime >> toTime;
+
+            int start_index = findFirstIndex(fromTime);
+            int end_index = findLastIndex(toTime);
+
+            if (start_index <= end_index) {
+                cout << end_index - start_index +1<< endl;
+            } else {
+                cout << 0 << endl;
+            }
+        }
+        else if (query == "MAX_UNRELATED_PEOPLE")
+        {
+            cout << findMaxUnrelatedPeople(citizenList, relationships) << endl;
+        }
+    }
+
+    return 0;
+}
