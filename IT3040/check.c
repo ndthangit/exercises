@@ -1,11 +1,14 @@
-#include <iostream>
-using namespace std;
-int main()
+#include <stdio.h>
+void hoanvi(int *px, int *py)
 {
-    int a = 10, b = 15;
-    int *p = &a, *q = &b;
-    a++ = ~a + b;
-    p--;
-    *p -= a ^ 2;
-    cout << a << ", " << b;
-}
+    int z;
+    z = *px;
+    *px = *py;
+    *py = z;
+};
+void main()
+{
+    int a = 35, b = 61;
+    hoanvi(a, b);
+    printf("%d%d", a, b);
+};
