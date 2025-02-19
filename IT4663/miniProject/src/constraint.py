@@ -1,5 +1,20 @@
 import sys
 
+def importData(dataPath):
+    data = {}
+    with open(dataPath, 'r') as f:
+        n, k, q = f.readline().split()
+        data['NumPoint'] = int(n)
+        data['NumTruck'] = int(k)
+        data['Capacity'] = int(q)
+        data['Request'] = [int(x) for x in f.readline().split()]
+        data['Request'].insert(0, 0)  # Ensure request array aligns with 1-based indexing
+        data['Matrix'] = []
+        for _ in range(data['NumPoint'] + 1):
+            data['Matrix'].append([int(x) for x in f.readline().split()])
+    return data
+
+
 def check_next_point(next_client, vehicle):
     if next_client > 0 and visited[next_client]:
         return False
@@ -84,8 +99,12 @@ def try_first_point(vehicle):
 if __name__ == "__main__":
     sys.setrecursionlimit(10 ** 6)
 
-    num_clients, num_trucks, capacity = map(int, input().split())
-    request = [0] + list(map(int, input().split()))
+    data = importData('test/testcount.txt')
+    num_clients = data['NumPoint']
+    num_trucks = data['NumTruck']
+    capacity = data['Capacity']
+    request = data['Request']
+    dis = data['Matrix']
 
     visited = [False] * (num_clients + 1)
     first_point = [0] * (num_trucks + 1)
@@ -95,17 +114,8 @@ if __name__ == "__main__":
     num_visited = 0
     min_route = float('inf')
     cur_route = 0
-    dis_min = float('inf')
+    dis_min = min(min(row) for row in dis if any(row))
     first_point[0] = 0
-
-    dis = [[0] * (num_clients + 1) for _ in range(num_clients + 1)]
-
-    for i in range(num_clients + 1):
-        row = list(map(int, input().split()))
-        for j in range(num_clients + 1):
-            dis[i][j] = row[j]
-            if 0 < dis[i][j] < dis_min:
-                dis_min = dis[i][j]
 
     try_first_point(1)
 
