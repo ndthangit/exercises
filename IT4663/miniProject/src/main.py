@@ -11,7 +11,6 @@ def importData(dataPath):
         data['Quantity']= [int (x) for x in f.readline().split()]
         data['Capacity']=[int (x) for x in f.readline().split()]
 
-
         data['Matrix']=[]
         for x in range(2 * (data ['NumParcel'] + data['NumPassenger']) + 1):
             data['Matrix'].append([int (x) for x in f.readline().split()])
@@ -41,6 +40,34 @@ def importData(dataPath):
     return data
 # print(importData("test/test2.txt"))
 
+def importData2():
+    data = {}
+
+    n, m, k = map(int, input().split())
+    data['NumParcel'] = n
+    data['NumPassenger'] = m
+    data['NumTaxis'] = k
+
+    data['Quantity'] = list(map(int, input().split()))
+    data['Capacity'] = list(map(int, input().split()))
+
+    data['Matrix'] = [list(map(int, input().split())) for _ in range(2 * (n + m) + 1)]
+
+    data['Depot'] = 0
+
+    data['Delivery'] = {
+        'PassengerRequest': [[i, i + n + m] for i in range(1, m + 1)],
+        'ParcelRequest': [[i + n, i + 2 * n + m] for i in range(1, n + 1)]
+    }
+
+    data['Request'] = [0] * (2 * (n + 2 * m) + 1)
+    for i in data['Quantity']:
+        data['Request'][i + n] = i
+        data['Request'][i + 2 * n + m] = -i
+
+    return data
+
+
 def print_solution(data, manager, routing, solution):
     """Prints solution on console."""
     print(f"Objective: {solution.ObjectiveValue()}")
@@ -68,13 +95,46 @@ def print_solution(data, manager, routing, solution):
         total_distance += route_distance
     print(f"Total Distance of all routes: {total_distance}m")
 
+def print_out_put(data, manager, routing, solution):
+    print(data['NumTaxis'])
+    total_distance = 0
+    for vehicle_id in range(data["NumTaxis"]):
+
+        index = routing.Start(vehicle_id)
+        # plan_output = f"Route for vehicle {vehicle_id}:\n"
+        plan_output = ""
+        # route_distance = 0
+        numPoint = 1
+        route=[]
+        while not routing.IsEnd(index):
+
+            # plan_output += f"{manager.IndexToNode(index)} "
+            route.append(manager.IndexToNode(index))
+            previous_index = index
+            index = solution.Value(routing.NextVar(index))
+            # route_distance += routing.GetArcCostForVehicle(
+            #     previous_index, index, vehicle_id
+            # )
+            numPoint += 1
+        # plan_output += f"{manager.IndexToNode(index)}\n"
+        route.append(manager.IndexToNode(index))
+        # plan_output += f"Distance of the route: {route_distance}m\n"
+        plan_output += f"{numPoint}\n"
+        for i in route:
+            plan_output += f"{i} "
+
+        print(plan_output)
+        # total_distance += route_distance
+    # print(f"Total Distance of all routes: {total_distance}m")
+
 def main():
     """Entry point of the program."""
     # Instantiate the data problem.
-    data = importData("test/test1.txt")
-    print(len(data['Matrix']))
-    for i in data['Matrix']:
-        print(len(i))
+    # data = importData("test/test1.txt")
+    data = importData2()
+    # print(len(data['Matrix']))
+    # for i in data['Matrix']:
+    #     print(len(i))
 
     # Create the routing index manager.
     manager = pywrapcp.RoutingIndexManager(
@@ -164,7 +224,8 @@ def main():
 
     # Print solution on console.
     if solution:
-        print_solution(data, manager, routing, solution)
+        # print_solution(data, manager, routing, solution)
+        print_out_put(data, manager, routing, solution)
 
     # print(data['Matrix'][4][10])
     # print(data['Matrix'][4][12])
