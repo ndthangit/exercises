@@ -1,6 +1,6 @@
 from ortools.constraint_solver import routing_enums_pb2
 from ortools.constraint_solver import pywrapcp
-
+import comparison
 def importData(dataPath):
     data ={}
     with open(dataPath, 'r') as f:
@@ -96,47 +96,27 @@ def print_solution(data, manager, routing, solution):
     print(f"Total Distance of all routes: {total_distance}m")
 
 def print_out_put(data, manager, routing, solution):
-    print(data['NumTaxis'])
-    total_distance = 0
+    # print(data['NumTaxis'])
+    routes=[]
     for vehicle_id in range(data["NumTaxis"]):
-
         index = routing.Start(vehicle_id)
-        # plan_output = f"Route for vehicle {vehicle_id}:\n"
         plan_output = ""
-        # route_distance = 0
         numPoint = 1
         route=[]
         while not routing.IsEnd(index):
-
-            # plan_output += f"{manager.IndexToNode(index)} "
             route.append(manager.IndexToNode(index))
-            previous_index = index
             index = solution.Value(routing.NextVar(index))
-            # route_distance += routing.GetArcCostForVehicle(
-            #     previous_index, index, vehicle_id
-            # )
             numPoint += 1
-        # plan_output += f"{manager.IndexToNode(index)}\n"
         route.append(manager.IndexToNode(index))
-        # plan_output += f"Distance of the route: {route_distance}m\n"
         plan_output += f"{numPoint}\n"
         for i in route:
             plan_output += f"{i} "
+        # print(plan_output)
+        routes.append(route)
+    return routes
 
-        print(plan_output)
-        # total_distance += route_distance
-    # print(f"Total Distance of all routes: {total_distance}m")
+def find_solution(data):
 
-def main():
-    """Entry point of the program."""
-    # Instantiate the data problem.
-    # data = importData("test/test1.txt")
-    data = importData2()
-    # print(len(data['Matrix']))
-    # for i in data['Matrix']:
-    #     print(len(i))
-
-    # Create the routing index manager.
     manager = pywrapcp.RoutingIndexManager(
         len(data["Matrix"]), data["NumTaxis"], data["Depot"]
     )
@@ -180,7 +160,7 @@ def main():
             routing.VehicleVar(pickup_index) == routing.VehicleVar(delivery_index)
         )
         routing.solver().Add(
-            distance_dimension.CumulVar(pickup_index)+1 <= distance_dimension.CumulVar(delivery_index)
+            distance_dimension.CumulVar(pickup_index) + 1 <= distance_dimension.CumulVar(delivery_index)
         )
 
     for request in data['Delivery']['ParcelRequest']:
@@ -211,13 +191,12 @@ def main():
         "Capacity",
     )
 
-
     # Setting first solution heuristic.
     search_parameters = pywrapcp.DefaultRoutingSearchParameters()
     search_parameters.first_solution_strategy = (
         routing_enums_pb2.FirstSolutionStrategy.PARALLEL_CHEAPEST_INSERTION
     )
-    search_parameters.time_limit.FromSeconds(30)
+    search_parameters.time_limit.FromSeconds(30000)
 
     # Solve the problem.
     solution = routing.SolveWithParameters(search_parameters)
@@ -225,14 +204,35 @@ def main():
     # Print solution on console.
     if solution:
         # print_solution(data, manager, routing, solution)
-        print_out_put(data, manager, routing, solution)
+        route1 = print_out_put(data, manager, routing, solution)
+        # print(comparison.route_distance(data['Matrix'], route1))
+        return print_out_put(data, manager, routing, solution)
+    else:
+        return None
 
-    # print(data['Matrix'][4][10])
-    # print(data['Matrix'][4][12])
-    # print(data['Matrix'][6][10])
-    # print(data['Matrix'][6][12])
+
+def main():
+    """Entry point of the program."""
+    # Instantiate the data problem.
+    # data = importData("test/test5.txt")
+    # print(comparison.route_distance_from_path(data['Matrix'], "result/test5.txt"))
+    # data = importData2()
+    # find_solution(data)
+    for i in range(1,12):
+        data = importData(f"test/test{i}.txt")
+        # print(comparison.route_distance_from_path(data['Matrix'], f"result/test{i}.txt"))
+        find_solution(data)
+        print(f"Output {i}: {find_solution(data)}, Result {i}: {comparison.route_distance_from_path(data['Matrix'], f'result/test{i}.txt')}")
+
+    # print(data['Matrix'][0][4])
     # print(data['Matrix'][4][6])
-    # print(data['Matrix'][10][12])
+    # print(data['Matrix'][6][10])
+    # print(data['Matrix'][10][3])
+    # print(data['Matrix'][3][9])
+    # print(data['Matrix'][9][12])
+    # print(data['Matrix'][12][2])
+    # print(data['Matrix'][2][8])
+    # print(data['Matrix'][8][0])
 
 
 if __name__ == "__main__":

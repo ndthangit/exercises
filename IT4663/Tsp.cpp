@@ -17,9 +17,6 @@ bool check( int point)
     return true;
 }
 
-void heuristic(int point){
-    for ( int i=0; i<)
-}
 void solve( int point)
 {
 
