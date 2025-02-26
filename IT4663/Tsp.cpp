@@ -9,11 +9,16 @@ int cmin = INT_MAX;
 int best_route = INT_MAX;
 int cur_route =0;
 int cur_pass=0;
+int route_test[1000];
 
 bool check( int point)
 {
     if( visited[point]) return false;
     return true;
+}
+
+void heuristic(int point){
+    for ( int i=0; i<)
 }
 void solve( int point)
 {
