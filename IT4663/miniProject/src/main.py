@@ -194,16 +194,16 @@ def find_solution(data):
     # Setting first solution heuristic.
     search_parameters = pywrapcp.DefaultRoutingSearchParameters()
     search_parameters.first_solution_strategy = (
-        routing_enums_pb2.FirstSolutionStrategy.PARALLEL_CHEAPEST_INSERTION
+        routing_enums_pb2.FirstSolutionStrategy.FIRST_UNBOUND_MIN_VALUE
     )
-    search_parameters.time_limit.FromSeconds(30000)
+    search_parameters.time_limit.FromSeconds(60)
 
     # Solve the problem.
     solution = routing.SolveWithParameters(search_parameters)
 
     # Print solution on console.
     if solution:
-        # print_solution(data, manager, routing, solution)
+        print_solution(data, manager, routing, solution)
         route1 = print_out_put(data, manager, routing, solution)
         # print(comparison.route_distance(data['Matrix'], route1))
         return print_out_put(data, manager, routing, solution)
@@ -218,11 +218,11 @@ def main():
     # print(comparison.route_distance_from_path(data['Matrix'], "result/test5.txt"))
     # data = importData2()
     # find_solution(data)
-    for i in range(1,12):
+    for i in range(1,2):
         data = importData(f"test/test{i}.txt")
         # print(comparison.route_distance_from_path(data['Matrix'], f"result/test{i}.txt"))
-        find_solution(data)
-        print(f"Output {i}: {find_solution(data)}, Result {i}: {comparison.route_distance_from_path(data['Matrix'], f'result/test{i}.txt')}")
+        route = find_solution(data)
+        print(f"Output {i}: {comparison.route_distance(data['Matrix'],route)}, Result {i}: {comparison.route_distance_from_path(data['Matrix'], f'result/test{i}.txt')}")
 
     # print(data['Matrix'][0][4])
     # print(data['Matrix'][4][6])
