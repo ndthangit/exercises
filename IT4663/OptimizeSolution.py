@@ -1,5 +1,4 @@
-"""Capacited Vehicles Routing Problem (CVRP)."""
-import time
+"""Vehicles Routing Problem (VRP)."""
 
 from ortools.constraint_solver import routing_enums_pb2
 from ortools.constraint_solver import pywrapcp
@@ -29,8 +28,14 @@ def create_data_model():
       [662, 1210, 754, 1358, 1244, 708, 480, 856, 514, 468, 354, 844, 730, 536, 194, 798, 0],
         # fmt: on
     ]
-    data["demands"] = [0, 1, 1, 2, 4, 2, 4, 8, 8, 1, 2, 1, 2, 4, 4, 8, 8]
-    data["vehicle_capacities"] = [15, 15, 15, 15]
+    data["initial_routes"] = [
+        # fmt: off
+      [8, 16, 14, 13, 12, 11],
+      [3, 4, 9, 10],
+      [15, 1],
+      [7, 5, 2, 6],
+        # fmt: on
+    ]
     data["num_vehicles"] = 4
     data["depot"] = 0
     return data
@@ -39,40 +44,28 @@ def create_data_model():
 def print_solution(data, manager, routing, solution):
     """Prints solution on console."""
     print(f"Objective: {solution.ObjectiveValue()}")
-    total_distance = 0
-    total_load = 0
+    max_route_distance = 0
     for vehicle_id in range(data["num_vehicles"]):
-        if not routing.IsVehicleUsed(solution, vehicle_id):
-            continue
         index = routing.Start(vehicle_id)
         plan_output = f"Route for vehicle {vehicle_id}:\n"
         route_distance = 0
-        route_load = 0
         while not routing.IsEnd(index):
-            node_index = manager.IndexToNode(index)
-            route_load += data["demands"][node_index]
-            plan_output += f" {node_index} Load({route_load}) -> "
+            plan_output += f" {manager.IndexToNode(index)} -> "
             previous_index = index
             index = solution.Value(routing.NextVar(index))
             route_distance += routing.GetArcCostForVehicle(
                 previous_index, index, vehicle_id
             )
-        plan_output += f" {manager.IndexToNode(index)} Load({route_load})\n"
+        plan_output += f"{manager.IndexToNode(index)}\n"
         plan_output += f"Distance of the route: {route_distance}m\n"
-        plan_output += f"Load of the route: {route_load}\n"
         print(plan_output)
-        total_distance += route_distance
-        total_load += route_load
-    print(f"Total distance of all routes: {total_distance}m")
-    print(f"Total load of all routes: {total_load}")
+        max_route_distance = max(route_distance, max_route_distance)
+    print(f"Maximum of the route distances: {max_route_distance}m")
+
 
 
 def main():
-
-
     """Solve the CVRP problem."""
-
-    start_time = time.time()  # Start the timer
     # Instantiate the data problem.
     data = create_data_model()
 
@@ -97,23 +90,19 @@ def main():
     # Define cost of each arc.
     routing.SetArcCostEvaluatorOfAllVehicles(transit_callback_index)
 
-    # Add Capacity constraint.
-    def demand_callback(from_index):
-        """Returns the demand of the node."""
-        # Convert from routing variable Index to demands NodeIndex.
-        from_node = manager.IndexToNode(from_index)
-        return data["demands"][from_node]
-
-    demand_callback_index = routing.RegisterUnaryTransitCallback(demand_callback)
-    routing.AddDimensionWithVehicleCapacity(
-        demand_callback_index,
-        0,  # null capacity slack
-        data["vehicle_capacities"],  # vehicle maximum capacities
+    # Add Distance constraint.
+    dimension_name = "Distance"
+    routing.AddDimension(
+        transit_callback_index,
+        0,  # no slack
+        3000,  # vehicle maximum travel distance
         True,  # start cumul to zero
-        "Capacity",
+        dimension_name,
     )
+    distance_dimension = routing.GetDimensionOrDie(dimension_name)
+    distance_dimension.SetGlobalSpanCostCoefficient(100)
 
-    # Setting first solution heuristic.
+    # Close model with the custom search parameters.
     search_parameters = pywrapcp.DefaultRoutingSearchParameters()
     search_parameters.first_solution_strategy = (
         routing_enums_pb2.FirstSolutionStrategy.PATH_CHEAPEST_ARC
@@ -121,19 +110,27 @@ def main():
     search_parameters.local_search_metaheuristic = (
         routing_enums_pb2.LocalSearchMetaheuristic.GUIDED_LOCAL_SEARCH
     )
-    search_parameters.time_limit.FromSeconds(1)
+    search_parameters.time_limit.FromSeconds(5)
+    # When an initial solution is given for search, the model will be closed with
+    # the default search parameters unless it is explicitly closed with the custom
+    # search parameters.
+    routing.CloseModelWithParameters(search_parameters)
+
+    # Get initial solution from routes after closing the model.
+    initial_solution = routing.ReadAssignmentFromRoutes(data["initial_routes"], True)
+    print("Initial solution:")
+    print_solution(data, manager, routing, initial_solution)
 
     # Solve the problem.
-    solution = routing.SolveWithParameters(search_parameters)
+    solution = routing.SolveFromAssignmentWithParameters(
+        initial_solution, search_parameters
+    )
 
     # Print solution on console.
     if solution:
+        print("Solution after search:")
         print_solution(data, manager, routing, solution)
 
-    end_time = time.time()  # End the timer
-    print(f"Time taken: {end_time - start_time} seconds")
 
 if __name__ == "__main__":
-    # show the time running of program
-
     main()
