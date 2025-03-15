@@ -8,7 +8,7 @@ def create_data_model():
     data = {}
     n = int(input())
     data['passenger'] = n
-    data["time_windows"] = [[0,30000]]
+    data["time_windows"] = [[0,100000]]
     data["request"] = [0]
 
     for i in range(n):
@@ -25,6 +25,25 @@ def create_data_model():
     data["depot"] = 0
     return data
 
+
+def print_solution(manager, routing, solution):
+    """Prints solution on console."""
+    print(f"Objective: {solution.ObjectiveValue()} miles")
+    index = routing.Start(0)
+    plan_output = "Route for vehicle 0:\n"
+    route_distance = 0
+    time_dimension = routing.GetDimensionOrDie("Time")
+
+    while not routing.IsEnd(index):
+        node_index = manager.IndexToNode(index)
+        time_var = time_dimension.CumulVar(index)
+        plan_output += f" {node_index} time ({solution.Min(time_var)},{solution.Max(time_var)}) ->"
+        previous_index = index
+        index = solution.Value(routing.NextVar(index))
+        route_distance += routing.GetArcCostForVehicle(previous_index, index, 0)
+    plan_output += f" {manager.IndexToNode(index)}\n"
+    print(plan_output)
+    plan_output += f"Route distance: {route_distance}miles\n"
 
 def print_output(manager, routing, solution):
     s = []
@@ -56,7 +75,7 @@ def main():
         """Returns the distance between the two nodes."""
         from_node = manager.IndexToNode(from_index)
         to_node = manager.IndexToNode(to_index)
-        return data["time_matrix"][from_node][to_node] + (data["request"][to_node] )
+        return data["time_matrix"][from_node][to_node] + data["request"][to_node]
 
     transit_callback_index = routing.RegisterTransitCallback(distance_callback)
 
@@ -68,7 +87,7 @@ def main():
     routing.AddDimension(
         transit_callback_index,
         0,  # allow waiting time
-        300000,  # maximum time per vehicle
+        100000,  # maximum time per vehicle
         False,  # Don't force start cumul to zero.
         time,
     )
@@ -82,20 +101,17 @@ def main():
         time_dimension.CumulVar(index).SetRange(time_window[0], time_window[1])
     #
     # # Add time window constraints for each vehicle start node.
-    # depot_idx = data["depot"]
-    # for vehicle_id in range(data["num_vehicles"]):
-    #     index = routing.Start(vehicle_id)
-    #     time_dimension.CumulVar(index).SetRange(
-    #         data["time_windows"][depot_idx][0], data["time_windows"][depot_idx][1]
-    #     )
-    # for i in range(data["num_vehicles"]):
-    #     routing.AddVariableMinimizedByFinalizer(
-    #         time_dimension.CumulVar(routing.Start(i))
-    #     )
-    #     routing.AddVariableMinimizedByFinalizer(time_dimension.CumulVar(routing.End(i)))
-    # Thiết lập ràng buộc thời gian cho kho (điểm 0)
-    # start_index = manager.NodeToIndex(0)
-    # time_dimension.CumulVar(start_index).SetRange(0, 300000)  # Thời gian bắt đầu từ 0
+    depot_idx = data["depot"]
+    for vehicle_id in range(data["num_vehicles"]):
+        index = routing.Start(vehicle_id)
+        time_dimension.CumulVar(index).SetRange(
+            data["time_windows"][depot_idx][0], data["time_windows"][depot_idx][1]
+        )
+    for i in range(data["num_vehicles"]):
+        routing.AddVariableMinimizedByFinalizer(
+            time_dimension.CumulVar(routing.Start(i))
+        )
+        routing.AddVariableMinimizedByFinalizer(time_dimension.CumulVar(routing.End(i)))
 
     # Setting first solution heuristic.
     search_parameters = pywrapcp.DefaultRoutingSearchParameters()
@@ -108,7 +124,8 @@ def main():
 
     # Print solution on console.
     if solution:
-        print_output(manager, routing, solution)
+        # print_output(manager, routing, solution)
+        print_solution(manager, routing, solution)
     else:
         print("Không tìm thấy lời giải")
 

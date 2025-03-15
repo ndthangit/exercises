@@ -1,5 +1,6 @@
 from ortools.constraint_solver import routing_enums_pb2
 from ortools.constraint_solver import pywrapcp
+import  time
 
 def importData(dataPath):
     data ={}
@@ -130,7 +131,7 @@ def print_out_put(data, manager, routing, solution):
 def main():
     """Entry point of the program."""
     # Instantiate the data problem.
-    data = importData("test/test1.txt")
+    data = importData("test/test5.txt")
     # data = importData2()
     # print(len(data['Matrix']))
     # for i in data['Matrix']:
@@ -218,14 +219,16 @@ def main():
         routing_enums_pb2.FirstSolutionStrategy.PARALLEL_CHEAPEST_INSERTION
     )
     search_parameters.time_limit.FromSeconds(30)
+    start = time.time()
 
     # Solve the problem.
     solution = routing.SolveWithParameters(search_parameters)
-
+    end = time.time()
     # Print solution on console.
     if solution:
         # print_solution(data, manager, routing, solution)
         print_out_put(data, manager, routing, solution)
+        print(f"Time: {end-start}")
 
     # print(data['Matrix'][4][10])
     # print(data['Matrix'][4][12])
