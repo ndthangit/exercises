@@ -82,7 +82,7 @@ def main():
     if status in [cp_model.OPTIMAL, cp_model.FEASIBLE]:
         print(int(solver.ObjectiveValue()))
         for i in range(data['num_people']):
-            print(f"{i}: {solver.Value(blood[i])} {solver.Value(change[i])}")
+            print(f"{i}: {solver.Value(blood[i])} {solver.Value(change[i])} {data['people'][i]['blood']}")
     else:
         print("No solution found.")
 

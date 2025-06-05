@@ -44,8 +44,8 @@ def main():
 
     if status == pywraplp.Solver.OPTIMAL:
         print(f"{solver.Objective().Value():.0f}")
-        # for i in range(data['num_point']+1):
-        #     print(f"{u[i].solution_value():.1f}", end=" ")
+        for i in range(data['num_point']+1):
+            print(f"{u[i].solution_value():.0f}", end=" ")
         # for i in range(data['num_point']+1):
         #     for j in range(data['num_point']+1):
         #         if i != j:

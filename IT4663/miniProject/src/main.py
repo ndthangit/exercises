@@ -194,8 +194,10 @@ def find_solution(data):
     # Setting first solution heuristic.
     search_parameters = pywrapcp.DefaultRoutingSearchParameters()
     search_parameters.first_solution_strategy = (
-        routing_enums_pb2.FirstSolutionStrategy.FIRST_UNBOUND_MIN_VALUE
+        routing_enums_pb2.RoutingSearchStatus.ROUTING_SUCCESS
     )
+
+
     search_parameters.time_limit.FromSeconds(60)
 
     # Solve the problem.

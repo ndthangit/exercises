@@ -16,29 +16,49 @@ def create_data_model(dataPath):
         data['num_vehicles'] = 1
         data['depot'] = 0
     return data
+def create_data():
+    data = {}
+    n = int(input())
+    data['NumPoint'] = n
+    data['distance_matrix'] = []
+    for i in range(n):
+        a = list(map(int, input().split()))
+        data['distance_matrix'].append(a)
+    data['num_vehicles'] = 1
+    data['depot'] = 0
+
+    return data
+
+
 
 
 def print_solution(manager, routing, solution):
     """Prints solution on console."""
-    print(f"Objective: {solution.ObjectiveValue()} miles")
+    # print(f"Objective: {solution.ObjectiveValue()} miles")
     index = routing.Start(0)
-    plan_output = "Route for vehicle 0:\n"
+    # plan_output = "Route for vehicle 0:\n"
+    plan_output = ""
     route_distance = 0
+    cout =0
     while not routing.IsEnd(index):
-        plan_output += f" {manager.IndexToNode(index)} ->"
+        plan_output += f"{manager.IndexToNode(index)+1} "
         previous_index = index
         index = solution.Value(routing.NextVar(index))
         route_distance += routing.GetArcCostForVehicle(previous_index, index, 0)
-    plan_output += f" {manager.IndexToNode(index)}\n"
+        cout += 1
+    # plan_output += f" {manager.IndexToNode(index)}\n"
+    print(cout)
     print(plan_output)
-    plan_output += f"Route distance: {route_distance}miles\n"
+    # plan_output += f"Route distance: {route_distance}miles\n"
 
 
 def main():
 
     """Entry point of the program."""
     # Instantiate the data problem.
-    data = create_data_model("input.txt")
+    # data = create_data_model("input.txt")
+    data = create_data()
+
 
     # Create the routing index manager.
     manager = pywrapcp.RoutingIndexManager(
@@ -75,7 +95,7 @@ def main():
     # Print solution on console.
     if solution:
         print_solution(manager, routing, solution)
-        print(f"Time: {end_time - start_time}s")
+        # print(f"Time: {end_time - start_time}s")
 
 
 if __name__ == "__main__":

@@ -33,10 +33,10 @@ def importData(dataPath):
             [i + data['NumParcel'], i + 2 * data['NumParcel'] + data['NumPassenger']])
 
 
-    data['Request']= [0]*(2 * (data['NumParcel'] + 2*data['NumPassenger'])+1)
-    for i in data['Quantity']:
-        data['Request'][i + data['NumParcel']] = i
-        data['Request'][i + 2 * data['NumParcel'] + data['NumPassenger']] = -i
+    data['Request']= [0]*(2 * (data['NumParcel'] + data['NumPassenger'])+1)
+    for i, value in enumerate(data['Quantity']):
+        data['Request'][i + 1 + data['NumParcel']] = value
+        data['Request'][i + 1 + 2 * data['NumParcel'] + data['NumPassenger']] = -value
 
     return data
 # print(importData("test/test2.txt"))
@@ -62,9 +62,10 @@ def importData2():
     }
 
     data['Request'] = [0] * (2 * (n + 2 * m) + 1)
-    for i in data['Quantity']:
-        data['Request'][i + n] = i
-        data['Request'][i + 2 * n + m] = -i
+    for i, value in enumerate(data['Quantity']):
+        data['Request'][i + 1 + data['NumParcel']] = value
+        data['Request'][i + 1 + 2 * data['NumParcel'] + data['NumPassenger']] = -value
+
 
     return data
 
@@ -128,15 +129,92 @@ def print_out_put(data, manager, routing, solution):
         # total_distance += route_distance
     # print(f"Total Distance of all routes: {total_distance}m")
 
+def greedy(data):
+    route = [[] for _ in range(data['NumTaxis'])]
+    for i in range(data['NumTaxis']):
+        # route[i].append(num_locations + i + 1)
+        route[i].append(0)
+    # print(route[0][-1])
+    cur_index_cap = [[] for _ in range(data['NumTaxis'])]
+    cur_cap = [0] * data['NumTaxis']
+    cur_dis = [0] * data['NumTaxis']
+
+    for req in data['Delivery']['PassengerRequest']:
+        taxi = cur_dis.index(min(cur_dis))
+        # print(taxi)
+        # print(type(route[taxi][0]))
+        # print(req)
+        cur_dis[taxi] += data['Matrix'][route[taxi][-1]][req[0]]
+        route[taxi].append(req[0])
+        # print(route[taxi])
+        # print(data['Matrix'][route[taxi][-1]][req[0]])
+
+        cur_dis[taxi] += data['Matrix'][route[taxi][-1]][req[1]]
+        route[taxi].append(req[1])
+
+        # print(cur_dis)
+
+    # print(cur_dis)
+    for req in data['Delivery']['ParcelRequest']:
+        taxi = cur_dis.index(min(cur_dis))
+        if cur_index_cap[taxi] == []:
+            cur_dis[taxi] += data['Matrix'][route[taxi][-1]][req[0]]
+            route[taxi].append(req[0])
+
+            cur_cap[taxi] += data['Request'][req[0]]
+            cur_index_cap[taxi].append(req[1])
+        else:
+            if cur_cap[taxi] + data['Request'][req[0]] <= data['Capacity'][taxi]:
+                cur_dis[taxi] += data['Matrix'][route[taxi][-1]][req[0]]
+                route[taxi].append(req[0])
+
+                cur_index_cap[taxi].append(req[1])
+                cur_cap[taxi] += data['Request'][req[0]]
+            else:
+                while cur_cap[taxi] + data['Request'][req[0]] > data['Capacity'][taxi]:
+                    point = cur_index_cap[taxi][0]
+                    for i in cur_index_cap[taxi][1:]:
+                        if data['Matrix'][route[taxi][-1]][i] < data['Matrix'][route[taxi][-1]][point]:
+                            point = i
+                    cur_dis[taxi] += data['Matrix'][route[taxi][-1]][point]
+                    route[taxi].append(point)
+                    cur_index_cap[taxi].remove(point)
+
+                    cur_cap[taxi] += data['Request'][point]
+                cur_dis[taxi] += data['Matrix'][route[taxi][-1]][req[0]]
+                route[taxi].append(req[0])
+                cur_index_cap[taxi].append(req[1])
+
+                cur_cap[taxi] += data['Request'][req[0]]
+    #     print(cur_dis)
+    # print(cur_index_cap)
+
+    for taxi in range(data['NumTaxis']):
+        while cur_index_cap[taxi] != []:
+            point = cur_index_cap[taxi][0]
+            for i in cur_index_cap[taxi][1:]:
+                if data['Matrix'][route[taxi][-1]][i] < data['Matrix'][route[taxi][-1]][point]:
+                    point = i
+            route[taxi].append(point)
+            cur_index_cap[taxi].remove(point)
+            cur_dis[taxi] += data['Matrix'][route[taxi][-1]][point]
+            cur_cap[taxi] += data['Request'][point]
+        # route[taxi].append(num_locations + data['NumTaxis']+taxi+1)
+        cur_dis[taxi] += data['Matrix'][route[taxi][-1]][0]
+        route[taxi].append(0)
+    return route
+
 def main():
     """Entry point of the program."""
     # Instantiate the data problem.
-    data = importData("test/test5.txt")
-    # data = importData2()
+    # data = importData("test/test5.txt")
+    # print(len(data['Request']))
+    data = importData2()
     # print(len(data['Matrix']))
     # for i in data['Matrix']:
     #     print(len(i))
-
+    # sample = [[4, 10, 6, 12, 2, 8], [5, 3, 9, 11, 1, 7]]
+    sample= greedy(data)
     # Create the routing index manager.
     manager = pywrapcp.RoutingIndexManager(
         len(data["Matrix"]), data["NumTaxis"], data["Depot"]
@@ -215,20 +293,32 @@ def main():
 
     # Setting first solution heuristic.
     search_parameters = pywrapcp.DefaultRoutingSearchParameters()
+
     search_parameters.first_solution_strategy = (
-        routing_enums_pb2.FirstSolutionStrategy.PARALLEL_CHEAPEST_INSERTION
+        routing_enums_pb2.FirstSolutionStrategy.LOCAL_CHEAPEST_ARC
+    )
+    search_parameters.local_search_metaheuristic = (
+        routing_enums_pb2.LocalSearchMetaheuristic.TABU_SEARCH
     )
     search_parameters.time_limit.FromSeconds(30)
+
+    routing.CloseModelWithParameters(search_parameters)
+    initial_solution = routing.ReadAssignmentFromRoutes(sample, True)
     start = time.time()
 
+    solution = routing.SolveFromAssignmentWithParameters(
+        initial_solution, search_parameters
+    )
+
+
     # Solve the problem.
-    solution = routing.SolveWithParameters(search_parameters)
+    # solution = routing.SolveWithParameters(search_parameters)
     end = time.time()
     # Print solution on console.
     if solution:
         # print_solution(data, manager, routing, solution)
         print_out_put(data, manager, routing, solution)
-        print(f"Time: {end-start}")
+        # print(f"Time: {end-start}")
 
     # print(data['Matrix'][4][10])
     # print(data['Matrix'][4][12])

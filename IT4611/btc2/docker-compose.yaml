@@ -1,0 +1,48 @@
+services:
+  # rabbitmq:
+  #   image: rabbitmq:3-management
+  #   container_name: rabbitmq
+  #   ports:
+  #     - "5672:5672"  # Port AMQP
+  #     - "15672:15672"  # Port giao diện quản lý
+  #   volumes:
+  #     - rabbitmq_data:/var/lib/rabbitmq
+  #   environment:
+  #     - RABBITMQ_DEFAULT_USER=admin
+  #     - RABBITMQ_DEFAULT_PASS=yourpassword
+  #   networks:
+  #     - test-network1
+  vlc-server:
+    image: ubuntu:20.04
+    container_name: vlc-server
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./videos:/videos
+    command: >
+      bash -c "apt-get update && 
+      apt-get install -y vlc && 
+      vlc -vvv /videos/test.mp4 --sout '#standard{access=http,mux=ts,dst=0.0.0.0:8080}'"
+    networks:
+      - test-network1
+
+  vlc-client:
+    image: ubuntu:20.04
+    container_name: vlc-client
+    depends_on:
+      - vlc-server
+    command: >
+      bash -c "apt-get update && 
+      apt-get install -y vlc && 
+      vlc http://vlc-server:8080"
+    networks:
+      - test-network1
+
+networks:
+  test-network1:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.25.0.0/24
+volumes:
+  rabbitmq_data:

@@ -1,0 +1,34 @@
+services:
+  web:
+    image: ubuntu/apache2 # Sử dụng image Apache 2.4 chính thức từ Docker Hub
+    container_name: apache-server
+    ports:
+      - "80:80"  # Ánh xạ cổng 80 trên máy host đến cổng 80 trong container
+    volumes:
+      - ./example.com/public_html:/var/www/example.com/public_html  # Mount thư mục website example.com
+      - ./test.com/public_html:/var/www/test.com/public_html  # Mount thư mục website test.com
+      - ./example.com/example.com.conf:/etc/apache2/sites-available/example.com.conf  # Mount file cấu hình example.com
+      - ./test.com/test.com.conf:/etc/apache2/sites-available/test.com.conf  # Mount file cấu hình test.com
+      - ./logs:/var/log/apache2  # Mount thư mục logs
+    command: >
+      /bin/bash -c "a2ensite example.com.conf &&
+                   a2ensite test.com.conf &&
+                   service apache2 restart &&
+                   tail -f /var/log/apache2/error.log"  # Giữ container chạy
+    networks:
+      - btc1
+  payara:
+    image: payara/server-full  # Sử dụng image Payara thay thế
+    container_name: payara-server  # Tên container
+    ports:
+      - "8080:8080"  # Cổng ứng dụng web
+      - "4848:4848"  # Cổng Payara Admin Console
+    environment:
+      - PAYARA_DOMAIN=domain1  # Tên domain mặc định
+      - PAYARA_PASSWORD=123456
+    restart: always  # Tự động khởi động lại nếu container bị dừng
+    networks:
+      - btc1
+networks:
+  btc1:
+    driver: bridge  # Sử dụng driver bridge
