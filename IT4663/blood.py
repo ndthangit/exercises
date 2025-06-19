@@ -1,4 +1,3 @@
-from ortools.linear_solver import pywraplp
 from ortools.sat.python import cp_model
 
 

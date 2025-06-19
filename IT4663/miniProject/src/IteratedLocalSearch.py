@@ -2,7 +2,6 @@ import copy
 import random
 import time
 
-
 def importData(dataPath):
     data ={}
     with open(dataPath, 'r') as f:
@@ -83,199 +82,420 @@ def main():
     def calculateTotalRoute(routes):
         return sum(calculateRouteDistance(route) for route in routes)
 
-    def isFeasible(routes):
-        all_points = set()
-
-        for idx, route in enumerate(routes):
-            cap = 0
-            visited = set()
-
-            for point in route:
-                # Kiểm tra trùng điểm trong cùng 1 route
-                if point in visited:
-                    return False
-                visited.add(point)
-
-                # Kiểm tra trùng điểm giữa các route
-                if point in all_points:
-                    return False
-                all_points.add(point)
-
-                # Kiểm tra dung lượng
-                cap += data['Request'][point]
-                if cap < 0 or cap > data['Capacity'][idx]:
-                    return False
-
-            for req in data['Delivery']['PassengerRequest']:
-                if req[0] in route and req[1] in route:
-                    x = route.index(req[0])
-                    y = route.index(req[1])
-                    if y != x + 1:
-                        return False
-
-            for req in data['Delivery']['ParcelRequest']:
-                if req[0] in route and req[1] in route:
-                    x = route.index(req[0])
-                    y = route.index(req[1])
-                    if y < x :
-                        return False
-
-        return True
-
     def initialSolution():
         taxis = [[] for _ in range(data['NumTaxis'])]
-        all_requests = []
-        for req in data['Delivery']['PassengerRequest']:
-            all_requests.append((req[0], req[1]))
-        for req in data['Delivery']['ParcelRequest']:
-            all_requests.append((req[0], req[1]))
-
-        random.shuffle(all_requests)
-        for i, req in enumerate(all_requests):
-            taxi_idx = i % data['NumTaxis']
-            taxis[taxi_idx].append(req[0])
-            taxis[taxi_idx].append(req[1])
+        for point in range(1, 2*(data['NumPassenger']+data['NumParcel'])+1):
+            # Chọn ngẫu nhiên một taxi
+            taxi_idx = random.randint(0, data['NumTaxis'] - 1)
+            taxis[taxi_idx].append(point)
 
         for i in range(data['NumTaxis']):
             taxis[i].insert(0, 0)
             taxis[i].append(0)
 
-        return taxis
+        best_error, best_problematic_points, best_point_in_route, best_error_cap = calculateError(taxis)
 
-    # check1 = [
-    #         [0, 1, 7, 3, 9, 0],
-    #         [0, 2, 8, 4, 5, 10, 6, 11, 12, 0]
-    #     ]
+        for [pickup, dropoff] in best_problematic_points['pointError'] + best_problematic_points['scheduleError']:
+            if pickup <= data['NumPassenger']:
+                taxis[best_point_in_route[dropoff]].remove(dropoff)
+                taxis[best_point_in_route[pickup]].insert(
+                    taxis[best_point_in_route[pickup]].index(pickup) + 1, dropoff)
+                best_point_in_route[dropoff] = best_point_in_route[pickup]
+                best_error -= 1
+
+            else:
+                taxis[best_point_in_route[dropoff]].remove(dropoff)
+                taxis[best_point_in_route[pickup]].insert(-1, dropoff)
+                best_point_in_route[dropoff] = best_point_in_route[pickup]
+                best_error -= 1
+
+        return taxis
+    def calculateError(routes):
+        error_count = 0
+        problematic_points = {
+            'scheduleError': [],
+            'pointError': []
+        }
+        point_in_route ={}
+        error_cap = {}
+
+
+        for idx, route in enumerate(routes):
+            cap = 0
+            for point in route:
+                # Check capacity constraints
+                cap += data['Request'][point]
+                point_in_route[point] = idx
+
+                if cap < 0 or cap > data['Capacity'][idx]:
+                    error_count += 1
+                    error_cap[idx] = 1
+
+            # Check passenger requests (pickup must be immediately before dropoff)
+            for req in [r for r in data['Delivery']['PassengerRequest'] if
+                r not in problematic_points['pointError'] and r not in problematic_points['scheduleError']]:
+                if req[0] in route and req[1] in route:
+                    x = route.index(req[0])
+                    y = route.index(req[1])
+                    if y != x + 1:
+                        error_count += 1
+                        problematic_points['pointError'].append(req)
+
+                elif req[0] in route and req[1] not in route:
+                    error_count += 1
+                    problematic_points['scheduleError'].append(req)
+
+                elif req[0] not in route and req[1] in route:
+                    error_count += 1
+                    problematic_points['scheduleError'].append(req)
+
+            # Check parcel requests (pickup must come before dropoff)
+            for req in [r for r in data['Delivery']['ParcelRequest'] if
+                       r not in problematic_points['pointError'] and r not in problematic_points['scheduleError']]:
+                if req[0] in route and req[1] in route:
+                    x = route.index(req[0])
+                    y = route.index(req[1])
+                    if y < x:
+                        error_count += 1
+                        problematic_points['pointError'].append(req)
+
+                elif req[0] in route and req[1] not in route:
+                    error_count += 1
+                    problematic_points['scheduleError'].append(req)
+
+                elif req[0] not in route and req[1] in route:
+                    error_count += 1
+                    problematic_points['scheduleError'].append(req)
+
+        return error_count, problematic_points, point_in_route, error_cap
+
+    # def initialSolution():
+    #     taxis = [[] for _ in range(data['NumTaxis'])]
+    #     all_requests = []
+    #     for req in data['Delivery']['PassengerRequest']:
+    #         all_requests.append((req[0], req[1]))
+    #     for req in data['Delivery']['ParcelRequest']:
+    #         all_requests.append((req[0], req[1]))
+    #
+    #     random.shuffle(all_requests)
+    #     for i, req in enumerate(all_requests):
+    #         taxi_idx = i % data['NumTaxis']
+    #         taxis[taxi_idx].append(req[0])
+    #         taxis[taxi_idx].append(req[1])
+    #
+    #     for i in range(data['NumTaxis']):
+    #         taxis[i].insert(0, 0)
+    #         taxis[i].append(0)
+    #
+    #     return taxis
+
+    check1 = [
+            [0, 1, 7, 2, 8, 3, 9, 4, 5, 6, 11, 10, 12, 0],
+            [0, 0]
+        ]
     # check2 = [
     #         [0, 8, 6, 5, 11, 12, 0],
     #         [0, 1, 9, 3, 2, 7, 4, 10, 0]
     #     ]
+    # print(calculateError(check1))
+    # print(calculateError(check2))
     # print(isFeasible(check1))
     # print(isFeasible(check2))
     # print(initialSolution())
     # print(isFeasible(initialSolution()))
     # print(calculateTotalRoute(initialSolution()))
 
-    def localSearch(solution):
-        best_solution = copy.deepcopy(solution)
-        best_max_distance = max(calculateRouteDistance(route) for route in best_solution)
 
-        improved = True
-        while improved:
-            improved = False
 
-            # Try swapping entire requests between routes
-            for i in range(len(solution)-1):
-                for j in range(i + 1, len(solution)):
-                    route_i = solution[i][1:-1]  # Exclude depot
-                    route_j = solution[j][1:-1]
 
-                    for k in range(0, len(route_i), 2):  # Step by 2 for pickup-dropoff pairs
-                        req_i = [route_i[k], route_i[k + 1]]
-                        for l in range(0, len(route_j), 2):
-                            req_j = [route_j[l], route_j[l + 1]]
-                            new_solution = copy.deepcopy(solution)
-                            # Swap the request pairs
-                            new_solution[i][k + 1:k + 3] = req_j
-                            new_solution[j][l + 1:l + 3] = req_i
+    # def generateNeighbors(solution, error_cap):
+    #     neighbors = []
+    #
+    #     idx = random.randint(0, len(solution) - 1)
+    #
+    #     solution_copy = copy.deepcopy(solution)
+    #     if idx in error_cap and error_cap[idx] == 1:
+    #         dropoff = random.randint(2 * data['NumPassenger']+ data['NumParcel'] + 1, 2 * data['NumPassenger']+  2*data['NumParcel'] )
+    #         pickup = dropoff - data['NumPassenger'] - data['NumParcel']
+    #         solution_copy[idx].remove(dropoff)
+    #         for i in range(solution_copy[idx].index(pickup), len(solution_copy[idx])):
+    #             solution_copy[idx].insert(i, dropoff)
+    #             neighbors.append(solution_copy)
+    #     return neighbors
+    # def neighborhood1(solution, error_cap):
+    #     neighbors = []
+    #
+    #     idx = random.randint(0, len(solution) - 1)
+    #
+    #     if idx in error_cap and error_cap[idx] == 1:
+    #         solution_copy = copy.deepcopy(solution)
+    #
+    #         # Lấy tất cả các điểm dropoff trong route[idx] và thuộc phạm vi yêu cầu
+    #         possible_dropoffs = [
+    #             point for point in solution_copy[idx]
+    #             if 2 * data['NumPassenger'] + data['NumParcel'] + 1 <= point <= 2 * data['NumPassenger'] + 2 * data[
+    #                 'NumParcel']
+    #         ]
+    #
+    #         if not possible_dropoffs:  # Nếu không có điểm dropoff nào thỏa mãn
+    #             return neighbors
+    #
+    #         dropoff = random.choice(possible_dropoffs)  # Chọn ngẫu nhiên 1 điểm dropoff hợp lệ
+    #         pickup = dropoff - data['NumParcel'] - data['NumPassenger']  # Tính điểm pickup tương ứng
+    #
+    #         if pickup in solution_copy[idx]:
+    #             solution_copy[idx].remove(dropoff)
+    #             pickup_pos = solution_copy[idx].index(pickup)
+    #
+    #             for i in range(pickup_pos + 1, len(solution_copy[idx])):
+    #                 new_solution = copy.deepcopy(solution_copy)
+    #                 new_solution[idx].insert(i, dropoff)
+    #                 neighbors.append(new_solution)
+    #
+    #     return neighbors
+    def neighborhood1(solution, error_cap):
+        neighbors = []
+        route_indices = [i for i in range(len(solution)) if i in error_cap and error_cap[i] == 1]
+        if not route_indices:
+            return neighbors
 
-                            # if isFeasible(new_solution):
-                            max_dist = max(calculateRouteDistance(route)
-                                           for route in new_solution)
-                            if max_dist < best_max_distance:
-                                best_solution = new_solution
-                                best_max_distance = max_dist
-                                improved = True
+        idx = random.choice(route_indices)
+        route = solution[idx]
 
-            # Try relocating requests within same route
-            for i in range(len(solution)):
-                route = solution[i][1:-1]  # Exclude depot
-                for k in range(0, len(route), 2):
-                    req = [route[k], route[k + 1]]
-                    for l in range(0, len(route), 2):
-                        if k == l:
-                            continue
-                        new_solution = copy.deepcopy(solution)
-                        new_solution[i].pop(k + 1)
-                        new_solution[i].pop(k)
-                        insert_pos = l if l < k else l - 2
-                        new_solution[i][insert_pos + 1:insert_pos + 1] = req
+        # Đảm bảo route có ít nhất 2 điểm (0 và 0)
+        if len(route) < 2:
+            return neighbors
 
-                        # if isFeasible(new_solution):
-                        max_dist = max(calculateRouteDistance(route)
-                                       for route in new_solution)
-                        if max_dist < best_max_distance:
-                            best_solution = new_solution
-                            best_max_distance = max_dist
-                            improved = True
+        passenger_dropoffs = []
+        parcel_dropoffs = []
 
-            solution = best_solution
-        return best_solution
+        # Chỉ xét các điểm không phải điểm đầu/cuối (0)
+        for point in route[1:-1]:
+            if 2 * data['NumPassenger'] + data['NumParcel'] + 1 <= point <= 2 * data['NumPassenger'] + 2 * data[
+                'NumParcel']:
+                if point <= 2 * data['NumPassenger'] + data['NumParcel']:
+                    passenger_dropoffs.append(point)
+                else:
+                    parcel_dropoffs.append(point)
 
-    def perturb(solution):
-        perturbed = copy.deepcopy(solution)
+        if passenger_dropoffs:
+            dropoff = random.choice(passenger_dropoffs)
+            pickup = dropoff - data['NumParcel'] - data['NumPassenger']
 
-        # Perform multiple random operations
-        for _ in range(random.randint(1, 3)):
-            operation = random.choice(['swap', 'relocate', 'reverse'])
+            if pickup in route[1:-1]:  # Chỉ xét các điểm không phải 0
+                for new_pos in range(1, len(route) - 1):
+                    if new_pos == route.index(pickup):
+                        continue
 
-            if operation == 'swap' and len(perturbed) >= 2:
-                i, j = random.sample(range(len(perturbed)), 2)
-                route_i = perturbed[i][1:-1]
-                route_j = perturbed[j][1:-1]
-                if len(route_i) >= 2 and len(route_j) >= 2:
-                    k = random.randint(0, len(route_i) - 2) // 2 * 2  # Ensure pickup point
-                    l = random.randint(0, len(route_j) - 2) // 2 * 2
-                    req_i = [route_i[k], route_i[k + 1]]
-                    req_j = [route_j[l], route_j[l + 1]]
-                    perturbed[i][k + 1:k + 3] = req_j
-                    perturbed[j][l + 1:l + 3] = req_i
+                    new_solution = copy.deepcopy(solution)
+                    new_route = new_solution[idx]
+                    new_route.remove(pickup)
+                    new_route.remove(dropoff)
+                    new_route.insert(new_pos, pickup)
+                    new_route.insert(new_pos + 1, dropoff)
 
-            elif operation == 'relocate' and len(perturbed) >= 2:
-                i, j = random.sample(range(len(perturbed)), 2)
-                route_i = perturbed[i][1:-1]
-                if len(route_i) >= 2:
-                    k = random.randint(0, len(route_i) - 2) // 2 * 2
-                    req = [route_i[k], route_i[k + 1]]
-                    perturbed[i].pop(k + 1)
-                    perturbed[i].pop(k)
-                    l = random.randint(0, len(perturbed[j]) - 2)
-                    perturbed[j][l + 1:l + 1] = req
+                    # Đảm bảo điểm đầu/cuối vẫn là 0
+                    if new_route[0] != 0 or new_route[-1] != 0:
+                        new_route[0], new_route[-1] = 0, 0
 
-            elif operation == 'reverse':
-                i = random.randint(0, len(perturbed) - 1)
-                route = perturbed[i][1:-1]
-                if len(route) > 3:
-                    start = random.randint(0, len(route) - 2) // 2 * 2
-                    end = random.randint(start + 2, len(route)) // 2 * 2
-                    perturbed[i][start + 1:end + 1] = perturbed[i][start + 1:end + 1][::-1]
+                    neighbors.append(new_solution)
+            return neighbors
 
-        return perturbed if isFeasible(perturbed) else solution
+        if parcel_dropoffs:
+            dropoff = random.choice(parcel_dropoffs)
+            pickup = dropoff - data['NumParcel'] - data['NumPassenger']
 
-    def iteratedLocalSearch(max_iterations=1000, max_time=30):
+            if pickup in route[1:-1]:
+                pickup_pos = route.index(pickup)
+                for new_pos in range(pickup_pos + 1, len(route) - 1):
+                    if route[new_pos] == dropoff:
+                        continue
+
+                    new_solution = copy.deepcopy(solution)
+                    new_route = new_solution[idx]
+                    new_route.remove(dropoff)
+                    new_route.insert(new_pos, dropoff)
+
+                    if new_route[0] != 0 or new_route[-1] != 0:
+                        new_route[0], new_route[-1] = 0, 0
+
+                    neighbors.append(new_solution)
+
+        return neighbors
+    def neighborhood2(solution, error_cap):
+        neighbors = []
+
+        # Select a random route
+        route_idx = random.randint(0, len(solution) - 1)
+        route = solution[route_idx]
+
+        # Lọc điểm pickup (tận dụng điều kiện <= n + m)
+        max_pickup = data['NumPassenger'] + data['NumParcel']
+        route_pickups = [point for point in route if 0 < point <= max_pickup]
+
+        if not route_pickups:
+            return neighbors
+
+        pickup = random.choice(route_pickups)
+
+        # Xác định dropoff tương ứng
+        if pickup <= data['NumPassenger']:  # Passenger pickup
+            dropoff = pickup + data['NumParcel'] + data['NumPassenger']
+            is_passenger = True
+        else:  # Parcel pickup
+            dropoff = pickup + data['NumParcel'] + data['NumPassenger']
+            is_passenger = False
+
+        if dropoff not in route:
+            return neighbors
+
+        pickup_pos = route.index(pickup)
+        dropoff_pos = route.index(dropoff)
+
+        if is_passenger:
+            # Xử lý đặc biệt cho Passenger: di chuyển cả pickup và dropoff
+            for new_pickup_pos in range(1, len(route) - 1):
+                if new_pickup_pos == pickup_pos:
+                    continue
+
+                new_solution = copy.deepcopy(solution)
+                new_route = new_solution[route_idx]
+
+                # Remove both pickup and dropoff
+                new_route.remove(pickup)
+                new_route.remove(dropoff)
+
+                # Insert pickup at new position and dropoff right after
+                new_route.insert(new_pickup_pos, pickup)
+                new_route.insert(new_pickup_pos + 1, dropoff)
+
+                neighbors.append(new_solution)
+        else:
+            # Xử lý bình thường cho Parcel
+            for new_pos in range(1, dropoff_pos):
+                if new_pos == pickup_pos:
+                    continue
+
+                new_solution = copy.deepcopy(solution)
+                new_route = new_solution[route_idx]
+                new_route.remove(pickup)
+                new_route.insert(new_pos, pickup)
+                neighbors.append(new_solution)
+
+        return neighbors
+
+    def neighborhood3(solution, error_cap):
+        neighbors = []
+        if len(solution) < 2:
+            return neighbors
+
+        route_indices = list(range(len(solution)))
+        if error_cap:
+            faulty_routes = [i for i in route_indices if i in error_cap]
+            if faulty_routes:
+                route_indices = faulty_routes
+
+        source_route_idx = random.choice(route_indices)
+        source_route = solution[source_route_idx]
+
+        # Bỏ qua điểm đầu/cuối (0) khi tìm cặp
+        valid_pairs = []
+        for i in range(1, len(source_route) - 1):
+            pickup = source_route[i]
+            if pickup > data['NumPassenger'] + data['NumParcel']:
+                continue
+
+            if 0 < pickup <= data['NumPassenger']:
+                dropoff = pickup + data['NumParcel'] + data['NumPassenger']
+                if i + 1 < len(source_route) - 1 and source_route[i + 1] == dropoff:
+                    valid_pairs.append((pickup, dropoff))
+            else:
+                dropoff = pickup + data['NumParcel'] + data['NumPassenger']
+                if dropoff in source_route[i + 1:-1]:
+                    valid_pairs.append((pickup, dropoff))
+
+        if not valid_pairs:
+            return neighbors
+
+        pickup, dropoff = random.choice(valid_pairs)
+        target_route_idx = random.choice([i for i in range(len(solution)) if i != source_route_idx])
+
+        new_solution = copy.deepcopy(solution)
+        source_route = new_solution[source_route_idx]
+        target_route = new_solution[target_route_idx]
+
+        source_route.remove(pickup)
+        source_route.remove(dropoff)
+
+        # Luôn chèn trước điểm 0 cuối cùng
+        insert_pos = len(target_route) - 1
+
+        if 0 < pickup <= data['NumPassenger']:
+            target_route.insert(insert_pos, pickup)
+            target_route.insert(insert_pos + 1, dropoff)
+        else:
+            target_route.insert(insert_pos, pickup)
+            dropoff_pos = random.randint(insert_pos + 1, len(target_route) - 1)
+            target_route.insert(dropoff_pos, dropoff)
+
+        # Đảm bảo cả 2 route vẫn có 0 ở đầu/cuối
+        if source_route[0] != 0 or source_route[-1] != 0:
+            source_route[0], source_route[-1] = 0, 0
+        if target_route[0] != 0 or target_route[-1] != 0:
+            target_route[0], target_route[-1] = 0, 0
+
+        neighbors.append(new_solution)
+        return neighbors
+
+    def generateNeighbors(solution, error_cap):
+        neighbors = []
+
+        neighbors.extend(neighborhood1(solution, error_cap))
+        neighbors.extend(neighborhood2(solution, error_cap))
+        neighbors.extend(neighborhood3(solution, error_cap))
+        return neighbors
+
+
+
+    def iteratedLocalSearch(solution, max_iterations=100000, max_time=10):
         start_time = time.time()
-        current_solution = initialSolution()
-        current_solution = localSearch(current_solution)
-        best_solution = copy.deepcopy(current_solution)
-        best_max_distance = max(calculateRouteDistance(route) for route in best_solution)
+
+        best_solution = copy.deepcopy(solution)
+        best_error, best_problematic_points, best_point_in_route, best_error_cap = calculateError(best_solution)
 
         iteration = 0
-        while iteration < max_iterations and (time.time() - start_time) < max_time:
-            perturbed_solution = perturb(current_solution)
-            perturbed_solution = localSearch(perturbed_solution)
-            current_max_distance = max(calculateRouteDistance(route)
-                                       for route in perturbed_solution)
+        while iteration < max_iterations and (time.time() - start_time) < max_time and best_error > 0:
+            # current_solution = copy.deepcopy(best_solution)
+            neighbor_solution = generateNeighbors(best_solution, best_error_cap )
 
-            if current_max_distance < best_max_distance:
-                best_solution = copy.deepcopy(perturbed_solution)
-                best_max_distance = current_max_distance
-                current_solution = perturbed_solution
+            for solution in neighbor_solution:
+                current_error, problematic_points, point_in_route, error_cap = calculateError(solution)
+
+                if current_error < best_error:
+
+                    best_solution = copy.deepcopy(solution)
+                    best_error = current_error
+                elif current_error == best_error:
+                    if calculateTotalRoute( solution) < calculateTotalRoute(best_solution):
+                        best_solution = copy.deepcopy(solution)
+                        best_error = current_error
 
             iteration += 1
 
         return best_solution
 
-    solution = iteratedLocalSearch()
+
+    # print(initialSolution())
+    # print(iteratedLocalSearch(initialSolution(), max_iterations=100000, max_time=30))
+
+    start_time = time.time()
+
+    solution = iteratedLocalSearch(initialSolution(),max_time=5)
+    end_time = time.time()
+
+    # print(f"Time: {end_time - start_time}")
+    # print(calculateTotalRoute(solution))
+
 
     print(data['NumTaxis'])
     for route in solution:

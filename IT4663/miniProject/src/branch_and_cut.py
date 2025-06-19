@@ -1,4 +1,4 @@
-
+import time
 
 def importData(dataPath):
     data ={}
@@ -85,15 +85,16 @@ def main():
     minRoute = float('inf')
     curRoute = 0
     nbr = 0
+    count =0
 
     vehicleVar = [0] * (num_clients + 1)
-    best_vehicleVar = [-1] * (num_clients + 1)  # Lưu trạng thái tốt nhất của vehicleVar
+    best_vehicleVar = [0] * (num_clients + 1)  # Lưu trạng thái tốt nhất của vehicleVar
     best_nextPoint = [0] * (num_clients + 1)    # Lưu trạng thái tốt nhất của nextPoint
 
     best_routes = []
 
     def save_routes():
-        nonlocal best_routes, best_vehicleVar,best_nextPoint
+        nonlocal best_routes, best_vehicleVar, best_nextPoint
         routes = []
         for truck in range(1, data['NumTaxis'] + 1):
             route = [0]
@@ -120,8 +121,11 @@ def main():
             return False
 
         for req in data['Delivery']['PassengerRequest']:
-            if curClient == req[0] and nextClient != req[1]:
-                return False
+            if curClient == req[0] :
+                if nextClient == req[1]:
+                    return True
+                else:
+                    return False
         for req in data['Delivery']['ParcelRequest']:
             if nextClient == req[1] :
                 if  visited[req[0]] == False:
@@ -133,7 +137,7 @@ def main():
         return True
 
     def try_schedule(point, vehicle):
-        nonlocal num_visited, curRoute, minRoute, nbr, best_routes, best_vehicleVar
+        nonlocal num_visited, curRoute, minRoute, nbr, best_routes, best_vehicleVar, count
         if point == 0:
             if vehicle < data['NumTaxis']:
                 try_schedule(firstPoint[vehicle + 1], vehicle + 1)
@@ -153,6 +157,7 @@ def main():
                         try_schedule(next_client, vehicle)
                 else:
                     if vehicle == data['NumTaxis']:
+                        count += 1
                         if (num_clients + nbr) == num_visited:
                             if curRoute < minRoute:
                                 minRoute = curRoute
@@ -220,7 +225,13 @@ def main():
                 curRoute -= data['Matrix'][0][client]
                 curCapacity[vehicle] -= data['Request'][client]
 
+    start_time  = time.time()
+
     try_firstPoint(1)
+    end_time = time.time()
+    # print(f"Time: {end_time - start_time}")
+    # print(f"Count: {count}")
+    # print(calculate_route_distance(data,best_routes[0],best_routes[1]))
     # print("Minimal total travel distance:", minRoute)
     # for i, route in enumerate(best_routes):
     #     print(f"Vehicle {i + 1}: {' -> '.join(map(str, route))}")

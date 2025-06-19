@@ -234,9 +234,9 @@ def greedy(data):
 def main():
     """Entry point of the program."""
     # Instantiate the data problem.
-    data = importData("test/test5.txt")
+    # data = importData("test/test5.txt")
     # print(len(data['Request']))
-    # data = importData2()
+    data = importData2()
     # print(len(data['Matrix']))
     # for i in data['Matrix']:
     #     print(len(i))
@@ -326,9 +326,9 @@ def main():
     )
 
     search_parameters.local_search_metaheuristic = (
-        routing_enums_pb2.LocalSearchMetaheuristic.GUIDED_LOCAL_SEARCH
+        routing_enums_pb2.LocalSearchMetaheuristic.SIMULATED_ANNEALING
     )
-    search_parameters.time_limit.FromSeconds(1)
+    search_parameters.time_limit.FromSeconds(30)
 
     # routing.CloseModelWithParameters(search_parameters)
     # initial_solution = routing.ReadAssignmentFromRoutes(sample, True)
@@ -345,9 +345,9 @@ def main():
     # Print solution on console.
     if solution:
         # print_solution(data, manager, routing, solution)
-        routes =print_out_put(data, manager, routing, solution)
-        print(f"Time: {end-start}")
-        print(calculate_route_distance(data, routes))
+        routes = print_out_put(data, manager, routing, solution)
+        # print(f"Time: {end-start}")
+        # print(calculate_route_distance(data, routes))
 
     # print(data['Matrix'][4][10])
     # print(data['Matrix'][4][12])

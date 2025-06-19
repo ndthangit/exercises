@@ -25,8 +25,8 @@ def main():
     # Creates the model.
     # model = cp_model.CpModel()
 
-    x = [[model.IntVar(0, 1, f'next x {i} {j}') for i in range(data['NumNodes']+1)] for j in range(data['NumNodes']+1)]
-    y = [[model.IntVar(0, 1, f'next y {i} {j}') for i in range(data['NumNodes']+1)] for j in range(data['NumNodes']+1)]
+    x = [[model.NumVar(0, 1, f'next x {i} {j}') for i in range(data['NumNodes']+1)] for j in range(data['NumNodes']+1)]
+    y = [[model.NumVar(0, 1, f'next y {i} {j}') for i in range(data['NumNodes']+1)] for j in range(data['NumNodes']+1)]
     model.Add(sum(x[1][i] for i in range(1,data['NumNodes']+1)) == 1)
     model.Add(sum(y[1][i] for i in range(1,data['NumNodes']+1)) == 1)
 

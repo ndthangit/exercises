@@ -258,7 +258,7 @@ def tabuSearch(data, max_iterations=1000, tabu_tenure=10, max_time=30):
 
 def main():
     # dataPath = "test/test5.txt"  # Replace with your actual data file path
-    # data = importData(dataPath)
+    # data = importData(dataPathath)
     data = importData2()
 
     solution = tabuSearch(data)

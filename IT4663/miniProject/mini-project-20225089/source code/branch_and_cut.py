@@ -1,6 +1,5 @@
 import time
 
-
 def importData(dataPath):
     data ={}
     with open(dataPath, 'r') as f:
@@ -65,11 +64,11 @@ def importData2():
 
     return data
 def main():
-    dataPath = "test/test9.txt"  # Replace with your actual data file path
-    data = importData(dataPath)
+    # dataPath = "test/test5.txt"  # Replace with your actual data file path
+    # data = importData(dataPath)
     # print(data['Request'])
     # print(data['Delivery']['ParcelRequest'])
-    # data = importData2()
+    data = importData2()
     num_clients = 2 * (data['NumParcel'] + data['NumPassenger'])
 
     disMin = float('inf')
@@ -86,16 +85,16 @@ def main():
     minRoute = float('inf')
     curRoute = 0
     nbr = 0
-    count = 0
+    count =0
 
-    vehicleVar = [-1] * (num_clients + 1)
+    vehicleVar = [0] * (num_clients + 1)
     best_vehicleVar = [-1] * (num_clients + 1)  # Lưu trạng thái tốt nhất của vehicleVar
     best_nextPoint = [0] * (num_clients + 1)    # Lưu trạng thái tốt nhất của nextPoint
 
     best_routes = []
 
     def save_routes():
-        nonlocal best_routes, best_vehicleVar,best_nextPoint
+        nonlocal best_routes, best_vehicleVar, best_nextPoint
         routes = []
         for truck in range(1, data['NumTaxis'] + 1):
             route = [0]
@@ -114,6 +113,7 @@ def main():
     def check_nextPoint(curClient, nextClient, vehicle):
         if nextClient > 0 and visited[nextClient]:
             return False
+
         if curCapacity[vehicle] + data['Request'][nextClient] > data['Capacity'][vehicle - 1]:
             return False
 
@@ -130,6 +130,7 @@ def main():
             if nextClient == req[1] :
                 if  visited[req[0]] == False:
                     return False
+
                 if vehicleVar[req[0]] != vehicle  :
                     return False
 
@@ -151,9 +152,9 @@ def main():
                 num_visited += 1
 
                 if next_client > 0:
-                    # predict = curRoute + (num_clients + nbr - num_visited) * disMin
-                    # if predict < minRoute:
-                    try_schedule(next_client, vehicle)
+                    predict = curRoute + (num_clients + nbr - num_visited) * disMin
+                    if predict < minRoute:
+                        try_schedule(next_client, vehicle)
                 else:
                     if vehicle == data['NumTaxis']:
                         count += 1
@@ -162,9 +163,9 @@ def main():
                                 minRoute = curRoute
                                 save_routes()  # Cập nhật best_routes và best_vehicleVar
                     else:
-                        # predict = curRoute + (num_clients + nbr - num_visited) * disMin
-                        # if predict < minRoute:
-                        try_schedule(firstPoint[vehicle + 1], vehicle + 1)
+                        predict = curRoute + (num_clients + nbr - num_visited) * disMin
+                        if predict < minRoute:
+                            try_schedule(firstPoint[vehicle + 1], vehicle + 1)
 
                 visited[next_client] = False
                 vehicleVar[next_client] = -1
@@ -175,6 +176,8 @@ def main():
     def check_firstPoint(point, vehicle):
         if point == 0:
             return True
+        if point > data['NumPassenger']+data['NumParcel']:
+            return False
         if visited[point]:
             return False
         if curCapacity[vehicle] + data['Request'][point] > data['Capacity'][vehicle - 1]:
@@ -185,10 +188,10 @@ def main():
 
     def try_firstPoint(vehicle):
         nonlocal num_visited, curRoute, minRoute, nbr
-        # s = 0
-        # if firstPoint[vehicle - 1] > 0:
-        #     s = firstPoint[vehicle - 1] + 1
-        for client in range(num_clients + 1):
+        s = 0
+        if firstPoint[vehicle - 1] > 0:
+            s = firstPoint[vehicle - 1] + 1
+        for client in range(s,num_clients + 1):
             if check_firstPoint(client, vehicle):
                 firstPoint[vehicle] = client
                 vehicleVar[client] = vehicle
@@ -212,7 +215,7 @@ def main():
                 if vehicle < data['NumTaxis']:
                     try_firstPoint(vehicle + 1)
                 else:
-                    # nbr = num_visited
+                    nbr = num_visited
                     try_schedule(firstPoint[1], 1)
 
                 if client > 0:
@@ -221,17 +224,19 @@ def main():
                 vehicleVar[client] = -1
                 curRoute -= data['Matrix'][0][client]
                 curCapacity[vehicle] -= data['Request'][client]
-    start_time = time.time()
+
+    start_time  = time.time()
+
     try_firstPoint(1)
     end_time = time.time()
     # print(f"Time: {end_time - start_time}")
     # print(f"Count: {count}")
-
+    # print(calculate_route_distance(data,best_routes[0],best_routes[1]))
     # print("Minimal total travel distance:", minRoute)
     # for i, route in enumerate(best_routes):
     #     print(f"Vehicle {i + 1}: {' -> '.join(map(str, route))}")
-
-    # In ra best_vehicleVar thay vì vehicleVar
+    #
+    # # In ra best_vehicleVar thay vì vehicleVar
     # print("\nVehicle assignment for each point (0 is depot):")
     # print("\nNext point information:")
     # for point in range(num_clients + 1):

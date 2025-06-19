@@ -1,4 +1,3 @@
-from numpy.random.c_distributions import random_normal
 from ortools.sat.python import cp_model
 
 def importData():

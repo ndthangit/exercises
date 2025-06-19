@@ -65,11 +65,11 @@ def importData2():
 
     return data
 def main():
-    dataPath = "test/test9.txt"  # Replace with your actual data file path
-    data = importData(dataPath)
+    # dataPath = "test/test5.txt"  # Replace with your actual data file path
+    # data = importData(dataPath)
     # print(data['Request'])
     # print(data['Delivery']['ParcelRequest'])
-    # data = importData2()
+    data = importData2()
     num_clients = 2 * (data['NumParcel'] + data['NumPassenger'])
 
     disMin = float('inf')

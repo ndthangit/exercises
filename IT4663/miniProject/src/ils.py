@@ -1,29 +1,67 @@
-import random
+#PYTHON 
 import copy
-from typing import List, Dict
+import random
+import time
 
 
-def importData(dataPath: str) -> Dict:
-    data = {}
+def importData(dataPath):
+    data ={}
     with open(dataPath, 'r') as f:
-        n, m, k = f.readline().split()
-        data['NumParcel'] = int(n)
-        data['NumPassenger'] = int(m)
-        data['NumTaxis'] = int(k)
-        data['Quantity'] = [int(x) for x in f.readline().split()]
-        data['Capacity'] = [int(x) for x in f.readline().split()]
-        data['Matrix'] = []
-        for x in range(2 * (data['NumParcel'] + data['NumPassenger']) + 1):
-            data['Matrix'].append([int(x) for x in f.readline().split()])
+        n,m,k = f.readline().split()
+        data['NumParcel'] =int(n)
+        data['NumPassenger'] =int(m)
+        data['NumTaxis'] =int(k)
+        data['Quantity']= [int (x) for x in f.readline().split()]
+        data['Capacity']=[int (x) for x in f.readline().split()]
+
+        data['Matrix']=[]
+        for x in range(2 * (data ['NumParcel'] + data['NumPassenger']) + 1):
+            data['Matrix'].append([int (x) for x in f.readline().split()])
+
+    data['Depot']=0
+
+    data['Delivery'] = {
+        'PassengerRequest': [],
+        'ParcelRequest': []
+    }
+
+    # Passenger data['Request']
+    for i in range(1, data['NumPassenger'] + 1):
+        data['Delivery']['PassengerRequest'].append([i, i + data['NumParcel'] + data['NumPassenger']])
+
+    # Parcel data['Request']
+    for i in range(1, data['NumParcel'] + 1):
+        data['Delivery']['ParcelRequest'].append(
+            [i + data['NumParcel'], i + 2 * data['NumParcel'] + data['NumPassenger']])
+
+
+    data['Request']= [0]*(2 * (data['NumParcel'] + 2*data['NumPassenger'])+1)
+    for i, value in enumerate(data['Quantity']):
+        data['Request'][i + 1 + data['NumParcel']] = value
+        data['Request'][i + 1 + 2 * data['NumParcel'] + data['NumPassenger']] = -value
+
+    return data
+def importData2():
+    data = {}
+
+    n, m, k = map(int, input().split())
+    data['NumParcel'] = n
+    data['NumPassenger'] = m
+    data['NumTaxis'] = k
+
+    data['Quantity'] = list(map(int, input().split()))
+    data['Capacity'] = list(map(int, input().split()))
+
+    data['Matrix'] = [list(map(int, input().split())) for _ in range(2 * (n + m) + 1)]
 
     data['Depot'] = 0
+
     data['Delivery'] = {
-        'PassengerRequest': [[i, i + data['NumParcel'] + data['NumPassenger']]
-                             for i in range(1, data['NumPassenger'] + 1)],
-        'ParcelRequest': [[i + data['NumParcel'], i + 2 * data['NumParcel'] + data['NumPassenger']]
-                          for i in range(1, data['NumParcel'] + 1)]
+        'PassengerRequest': [[i, i + n + m] for i in range(1, m + 1)],
+        'ParcelRequest': [[i + n, i + 2 * n + m] for i in range(1, n + 1)]
     }
-    data['Request'] = [0] * (2 * (data['NumParcel'] + data['NumPassenger']) + 1)
+
+    data['Request'] = [0] * (2 * (n + 2 * m) + 1)
     for i, value in enumerate(data['Quantity']):
         data['Request'][i + 1 + data['NumParcel']] = value
         data['Request'][i + 1 + 2 * data['NumParcel'] + data['NumPassenger']] = -value
@@ -31,212 +69,214 @@ def importData(dataPath: str) -> Dict:
     return data
 
 
-def calculateRouteDistance(route: List[int], matrix: List[List[int]]) -> int:
-    if not route: return 0
-    distance = 0
-    for i in range(len(route) - 1):
-        distance += matrix[route[i]][route[i + 1]]
-    return distance
+def main():
+    dataPath = "test/test5.txt"  # Replace with your actual data file path
+    data = importData(dataPath)
+    # # print(data['Request'])
+    # print(data['Delivery']['ParcelRequest'])
+    # data = importData2()
 
+    def calculateRouteDistance(route):
+        distance = 0
+        for i in range(len(route) - 1):
+            distance += data['Matrix'][route[i]][route[i + 1]]
+        return distance
+    def calculateTotalRoute(routes):
+        return sum(calculateRouteDistance(route) for route in routes)
 
-def isFeasible(routes: List[List[int]], data: Dict) -> bool:
-    for idx, route in enumerate(routes):
-        if not route or route[0] != 0 or route[-1] != 0:
-            return False
+    def isFeasible(routes):
+        all_points = set()
 
-        # Check capacity constraints
-        current_load = 0
-        visited = set()
-        for i, point in enumerate(route):
-            current_load += data['Request'][point]
-            if current_load < 0 or current_load > data['Capacity'][idx]:
-                return False
-            if point != 0 and point in visited:
-                return False
-            visited.add(point)
+        for idx, route in enumerate(routes):
+            cap = 0
+            visited = set()
 
-            # Check passenger direct trip constraint
+            for point in route:
+                # Kiểm tra trùng điểm trong cùng 1 route
+                if point in visited:
+                    return False
+                visited.add(point)
+
+                # Kiểm tra trùng điểm giữa các route
+                if point in all_points:
+                    return False
+                all_points.add(point)
+
+                # Kiểm tra dung lượng
+                cap += data['Request'][point]
+                if cap < 0 or cap > data['Capacity'][idx]:
+                    return False
+
             for req in data['Delivery']['PassengerRequest']:
-                if point == req[0] and (i + 1 >= len(route) or route[i + 1] != req[1]):
-                    return False
+                if req[0] in route and req[1] in route:
+                    x = route.index(req[0])
+                    y = route.index(req[1])
+                    if y != x + 1:
+                        return False
 
-            # Check parcel delivery order
             for req in data['Delivery']['ParcelRequest']:
-                if point == req[1] and req[0] not in route[:i]:
-                    return False
+                if req[0] in route and req[1] in route:
+                    x = route.index(req[0])
+                    y = route.index(req[1])
+                    if y < x :
+                        return False
 
-    # Check if all requests are served
-    all_points = set()
-    for route in routes:
-        all_points.update(route[1:-1])  # Exclude depot
-    for req in data['Delivery']['PassengerRequest'] + data['Delivery']['ParcelRequest']:
-        if req[0] not in all_points or req[1] not in all_points:
-            return False
+        return True
 
-    return True
+    def initialSolution():
+        taxis = [[] for _ in range(data['NumTaxis'])]
+        all_requests = []
+        for req in data['Delivery']['PassengerRequest']:
+            all_requests.append((req[0], req[1]))
+        for req in data['Delivery']['ParcelRequest']:
+            all_requests.append((req[0], req[1]))
 
+        random.shuffle(all_requests)
+        for i, req in enumerate(all_requests):
+            taxi_idx = i % data['NumTaxis']
+            taxis[taxi_idx].append(req[0])
+            taxis[taxi_idx].append(req[1])
 
-def initialSolution(data: Dict) -> List[List[int]]:
-    taxis = [[0] for _ in range(data['NumTaxis'])]
-    all_requests = data['Delivery']['PassengerRequest'] + data['Delivery']['ParcelRequest']
-    random.shuffle(all_requests)
+        for i in range(data['NumTaxis']):
+            taxis[i].insert(0, 0)
+            taxis[i].append(0)
 
-    for req in all_requests:
-        assigned = False
-        for taxi_idx in random.sample(range(data['NumTaxis']), data['NumTaxis']):
-            route = taxis[taxi_idx].copy()
-            route = route[:-1] + req + [0]  # Insert request before final depot
-            taxis[taxi_idx] = route
-            if isFeasible(taxis, data):
-                assigned = True
-                break
-            else:
-                taxis[taxi_idx] = route[:-3] + [0]  # Revert if not feasible
-        if not assigned:
-            # If can't assign, try splitting routes
-            for taxi_idx in random.sample(range(data['NumTaxis']), data['NumTaxis']):
-                route = taxis[taxi_idx]
-                for pos in range(1, len(route)):
-                    new_route = route[:pos] + req + route[pos:-1] + [0]
-                    taxis[taxi_idx] = new_route
-                    if isFeasible(taxis, data):
-                        assigned = True
-                        break
-                if assigned:
-                    break
-            if not assigned:
-                taxis[0] = [0] + req + [0]  # Fallback to first taxi
+        return taxis
 
-    return taxis
+    # check1 = [
+    #         [0, 1, 7, 3, 9, 0],
+    #         [0, 2, 8, 4, 5, 10, 6, 11, 12, 0]
+    #     ]
+    # check2 = [
+    #         [0, 8, 6, 5, 11, 12, 0],
+    #         [0, 1, 9, 3, 2, 7, 4, 10, 0]
+    #     ]
+    # print(isFeasible(check1))
+    # print(isFeasible(check2))
+    # print(initialSolution())
+    # print(isFeasible(initialSolution()))
+    # print(calculateTotalRoute(initialSolution()))
 
+    def localSearch(solution):
+        best_solution = copy.deepcopy(solution)
+        best_max_distance = max(calculateRouteDistance(route) for route in best_solution)
 
-def swap_nodes(route: List[int], i: int, j: int) -> List[int]:
-    new_route = route.copy()
-    new_route[i], new_route[j] = new_route[j], new_route[i]
-    return new_route
-
-
-def relocate_node(route: List[int], i: int, j: int) -> List[int]:
-    new_route = route.copy()
-    node = new_route.pop(i)
-    new_route.insert(j, node)
-    return new_route
-
-
-def two_opt(route: List[int], i: int, j: int) -> List[int]:
-    new_route = route[:i] + route[i:j + 1][::-1] + route[j + 1:]
-    return new_route
-
-
-def localSearch(solution: List[List[int]], data: Dict) -> List[List[int]]:
-    best_solution = copy.deepcopy(solution)
-    best_max_dist = max(calculateRouteDistance(route, data['Matrix']) for route in best_solution)
-
-    for taxi_idx in range(len(solution)):
-        route = solution[taxi_idx]
         improved = True
         while improved:
             improved = False
-            for i in range(1, len(route) - 2):
-                for j in range(i + 1, len(route) - 1):
-                    # Try swap
-                    new_route = swap_nodes(route, i, j)
-                    new_solution = solution.copy()
-                    new_solution[taxi_idx] = new_route
-                    if isFeasible(new_solution, data):
-                        new_max_dist = max(calculateRouteDistance(r, data['Matrix']) for r in new_solution)
-                        if new_max_dist < best_max_dist:
-                            solution = new_solution
-                            route = new_route
-                            best_max_dist = new_max_dist
-                            improved = True
 
-                    # Try relocate
-                    new_route = relocate_node(route, i, j)
-                    new_solution = solution.copy()
-                    new_solution[taxi_idx] = new_route
-                    if isFeasible(new_solution, data):
-                        new_max_dist = max(calculateRouteDistance(r, data['Matrix']) for r in new_solution)
-                        if new_max_dist < best_max_dist:
-                            solution = new_solution
-                            route = new_route
-                            best_max_dist = new_max_dist
-                            improved = True
+            # Try swapping entire requests between routes
+            for i in range(len(solution)-1):
+                for j in range(i + 1, len(solution)):
+                    route_i = solution[i][1:-1]  # Exclude depot
+                    route_j = solution[j][1:-1]
 
-                    # Try 2-opt
-                    new_route = two_opt(route, i, j)
-                    new_solution = solution.copy()
-                    new_solution[taxi_idx] = new_route
-                    if isFeasible(new_solution, data):
-                        new_max_dist = max(calculateRouteDistance(r, data['Matrix']) for r in new_solution)
-                        if new_max_dist < best_max_dist:
-                            solution = new_solution
-                            route = new_route
-                            best_max_dist = new_max_dist
-                            improved = True
+                    for k in range(0, len(route_i), 2):  # Step by 2 for pickup-dropoff pairs
+                        req_i = [route_i[k], route_i[k + 1]]
+                        for l in range(0, len(route_j), 2):
+                            req_j = [route_j[l], route_j[l + 1]]
+                            new_solution = copy.deepcopy(solution)
+                            # Swap the request pairs
+                            new_solution[i][k + 1:k + 3] = req_j
+                            new_solution[j][l + 1:l + 3] = req_i
 
-            if improved:
-                best_solution = copy.deepcopy(solution)
+                            if isFeasible(new_solution):
+                                max_dist = max(calculateRouteDistance(route)
+                                               for route in new_solution)
+                                if max_dist < best_max_distance:
+                                    best_solution = new_solution
+                                    best_max_distance = max_dist
+                                    improved = True
 
-    return best_solution
+            # Try relocating requests within same route
+            for i in range(len(solution)):
+                route = solution[i][1:-1]  # Exclude depot
+                for k in range(0, len(route), 2):
+                    req = [route[k], route[k + 1]]
+                    for l in range(0, len(route), 2):
+                        if k == l:
+                            continue
+                        new_solution = copy.deepcopy(solution)
+                        new_solution[i].pop(k + 1)
+                        new_solution[i].pop(k)
+                        insert_pos = l if l < k else l - 2
+                        new_solution[i][insert_pos + 1:insert_pos + 1] = req
 
+                        if isFeasible(new_solution):
+                            max_dist = max(calculateRouteDistance(route)
+                                           for route in new_solution)
+                            if max_dist < best_max_distance:
+                                best_solution = new_solution
+                                best_max_distance = max_dist
+                                improved = True
 
-def perturb(solution: List[List[int]], data: Dict) -> List[List[int]]:
-    perturbed_solution = copy.deepcopy(solution)
-    if len(perturbed_solution) < 2:
-        return perturbed_solution
+            solution = best_solution
+        return best_solution
 
-    # Randomly swap points between routes
-    i, j = random.sample(range(len(perturbed_solution)), 2)
-    if len(perturbed_solution[i]) > 2 and len(perturbed_solution[j]) > 2:
-        k = random.randint(1, len(perturbed_solution[i]) - 2)
-        l = random.randint(1, len(perturbed_solution[j]) - 2)
-        perturbed_solution[i][k], perturbed_solution[j][l] = perturbed_solution[j][l], perturbed_solution[i][k]
+    def perturb(solution):
+        perturbed = copy.deepcopy(solution)
 
-    # Randomly shuffle a route (keeping depot and passenger constraints)
-    taxi_idx = random.randint(0, len(perturbed_solution) - 1)
-    route = perturbed_solution[taxi_idx][1:-1]
-    random.shuffle(route)
-    # Reinsert passenger pairs together
-    new_route = [0]
-    for req in data['Delivery']['PassengerRequest']:
-        if req[0] in route and req[1] in route:
-            new_route.extend(req)
-            route.remove(req[0])
-            route.remove(req[1])
-    new_route.extend(route)
-    new_route.append(0)
-    perturbed_solution[taxi_idx] = new_route
+        # Perform multiple random operations
+        for _ in range(random.randint(1, 3)):
+            operation = random.choice(['swap', 'relocate', 'reverse'])
 
-    return perturbed_solution
+            if operation == 'swap' and len(perturbed) >= 2:
+                i, j = random.sample(range(len(perturbed)), 2)
+                route_i = perturbed[i][1:-1]
+                route_j = perturbed[j][1:-1]
+                if len(route_i) >= 2 and len(route_j) >= 2:
+                    k = random.randint(0, len(route_i) - 2) // 2 * 2  # Ensure pickup point
+                    l = random.randint(0, len(route_j) - 2) // 2 * 2
+                    req_i = [route_i[k], route_i[k + 1]]
+                    req_j = [route_j[l], route_j[l + 1]]
+                    perturbed[i][k + 1:k + 3] = req_j
+                    perturbed[j][l + 1:l + 3] = req_i
 
+            elif operation == 'relocate' and len(perturbed) >= 2:
+                i, j = random.sample(range(len(perturbed)), 2)
+                route_i = perturbed[i][1:-1]
+                if len(route_i) >= 2:
+                    k = random.randint(0, len(route_i) - 2) // 2 * 2
+                    req = [route_i[k], route_i[k + 1]]
+                    perturbed[i].pop(k + 1)
+                    perturbed[i].pop(k)
+                    l = random.randint(0, len(perturbed[j]) - 2)
+                    perturbed[j][l + 1:l + 1] = req
 
-def iteratedLocalSearch(data: Dict, max_iterations: int = 1000) -> List[List[int]]:
-    current_solution = initialSolution(data)
-    if not isFeasible(current_solution, data):
-        current_solution = initialSolution(data)  # Retry if initial solution is not feasible
-    current_solution = localSearch(current_solution, data)
-    best_solution = copy.deepcopy(current_solution)
-    best_max_distance = max(calculateRouteDistance(route, data['Matrix']) for route in best_solution)
+            elif operation == 'reverse':
+                i = random.randint(0, len(perturbed) - 1)
+                route = perturbed[i][1:-1]
+                if len(route) > 3:
+                    start = random.randint(0, len(route) - 2) // 2 * 2
+                    end = random.randint(start + 2, len(route)) // 2 * 2
+                    perturbed[i][start + 1:end + 1] = perturbed[i][start + 1:end + 1][::-1]
 
-    for _ in range(max_iterations):
-        perturbed_solution = perturb(current_solution, data)
-        perturbed_solution = localSearch(perturbed_solution, data)
-        if isFeasible(perturbed_solution, data):
-            current_max_distance = max(calculateRouteDistance(route, data['Matrix']) for route in perturbed_solution)
+        return perturbed if isFeasible(perturbed) else solution
+
+    def iteratedLocalSearch(max_iterations=100, max_time=30):
+        start_time = time.time()
+        current_solution = initialSolution()
+        current_solution = localSearch(current_solution)
+        best_solution = copy.deepcopy(current_solution)
+        best_max_distance = max(calculateRouteDistance(route) for route in best_solution)
+
+        iteration = 0
+        while iteration < max_iterations and (time.time() - start_time) < max_time:
+            perturbed_solution = perturb(current_solution)
+            perturbed_solution = localSearch(perturbed_solution)
+            current_max_distance = max(calculateRouteDistance(route)
+                                       for route in perturbed_solution)
+
             if current_max_distance < best_max_distance:
                 best_solution = copy.deepcopy(perturbed_solution)
                 best_max_distance = current_max_distance
-        current_solution = perturbed_solution
+                current_solution = perturbed_solution
 
-    return best_solution
+            iteration += 1
 
+        return best_solution
 
-def main():
-    dataPath = "test/test5.txt"  # Replace with actual data file path
-    data = importData(dataPath)
-
-    solution = iteratedLocalSearch(data)
+    solution = iteratedLocalSearch()
 
     print(data['NumTaxis'])
     for route in solution:
