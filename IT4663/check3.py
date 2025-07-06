@@ -12,21 +12,11 @@ def importData():
 n,m,sochuyengia,chiphi,matrix = importData()
 model = pywraplp.Solver.CreateSolver("SCIP")
 
-x = [[model.IntVar(0,1,f"x[{i},{j}]") for i in range(n)] for j in range(m)]
+# x = [[model.IntVar(0,1,f"x[{i},{j}]") for i in range(n)] for j in range(m)]
 y = [model.IntVar(0,1,f"y[{i}]") for i in range(m)]
 
 for i in range(n):
-    model.Add(sum(x[j][i] for j in range(m)) >= sochuyengia[i])
-
-    for  j in range(m):
-        model.Add(x[j][i] <= matrix[j][i])
-
-# for i in range(m):
-#     model.Add(sum(x[i][j] for j in range(n))<= y[i]*n)
-
-for i in range(m):
-    for j in range(n):
-        model.Add(y[i] >= x[i][j] )
+    model.Add(sum(y[j]*matrix[j][i] for j in range(m))>= sochuyengia[i])
 
 model.Minimize(sum(
     chiphi[i] * y[i] for i in range(m)
